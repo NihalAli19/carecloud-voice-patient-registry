@@ -6,7 +6,7 @@ A voice-based patient registration demo built for the CareCloud AI Engineer asse
 
 ## Submission details
 
-Fill these in after deployment:
+Live assessment endpoints:
 
 - **Repository:** `https://github.com/NihalAli19/carecloud-voice-patient-registry`
 - **U.S. phone number:** `+1 864-625-5246`
@@ -47,17 +47,17 @@ Current official limits and vendor behavior should be rechecked before submissio
 - All required demographics and caller-selected optional fields.
 - Specific validation for names, date of birth, U.S. phone numbers, state, ZIP, email, and member ID.
 - Full readback and explicit confirmation enforced both in the prompt and at the write tool boundary.
-- Duplicate lookup by phone and update offer.
+- Duplicate lookup by phone, race-safe active-phone uniqueness, and a DOB-verified update offer.
 - Persistent SQL schema with constraints, indexed filters, UTC timestamps, and UUID identifiers.
 - Complete REST CRUD with partial `PUT`, soft delete, pagination, filters, correct status codes, and a consistent envelope.
-- Idempotent REST and Vapi registration to protect against retry-created duplicates.
+- Idempotent REST and Vapi registration with payload fingerprints to prevent retry-created duplicates and key reuse with changed data.
 - Authenticated mutation/read API and separately authenticated Vapi webhook.
 - End-of-call transcript/summary storage linked to the patient when registration succeeds.
 - English/Spanish language switching.
 - Responsive API-key-protected dashboard.
 - OpenAPI 3.1 document at `/openapi.json` and human summary at `/docs`.
-- Structured stdout logs, health check, request IDs, security headers, and no hardcoded secrets.
-- Unit tests plus local migration and deployment dry-run validation.
+- Structured stdout logs, health check, request IDs, nonce-based CSP/security headers, bounded request bodies, and no hardcoded secrets.
+- Unit and security regression tests, tracked-file secret scanning, dependency auditing in CI, local migrations, and deployment dry-run validation.
 
 ## API
 
@@ -119,6 +119,12 @@ npm run check
 npx wrangler deploy --dry-run
 ```
 
+Release verification helpers read credentials only from environment variables:
+
+- `npm run smoke:api` requires `PUBLIC_BASE_URL`, `API_KEY`, and `VAPI_WEBHOOK_SECRET`; it uses synthetic data and soft-deletes created patients.
+- `npm run verify:public` requires `PUBLIC_BASE_URL` and checks health, documentation, and browser security headers.
+- `npm run verify:vapi` requires the Vapi IDs and private credentials and reads back the live assistant/phone configuration without printing secrets.
+
 ## Cloudflare deployment
 
 1. Authenticate and create D1:
@@ -128,7 +134,7 @@ npx wrangler deploy --dry-run
    npx wrangler d1 create carecloud-patient-registry
    ```
 
-2. Replace `REPLACE_AFTER_RUNNING_WRANGLER_D1_CREATE` in `wrangler.toml` with the returned database ID. Set `ENVIRONMENT = "production"`. Set `ALLOWED_ORIGIN` to the final Worker origin after the first deploy.
+2. Confirm the D1 binding in `wrangler.toml` uses your returned database ID and set `ENVIRONMENT = "production"`. Keep `ALLOWED_ORIGIN` empty for this same-origin dashboard; set it only when a separate, trusted frontend origin needs browser CORS access.
 
 3. Store secrets; do not put them in `wrangler.toml`:
 
@@ -148,7 +154,7 @@ npx wrangler deploy --dry-run
 
 ## Vapi setup
 
-The complete system prompt is versioned at [`config/assistant-prompt.md`](config/assistant-prompt.md). The configuration script creates or updates an assistant without writing secrets to disk.
+The complete system prompt is versioned at [`config/assistant-prompt.md`](config/assistant-prompt.md). The configuration script creates or updates an assistant without writing secrets to the repository. The live assessment currently uses the assistant and U.S. number listed above.
 
 PowerShell example:
 
@@ -175,11 +181,11 @@ The script defaults to Vapi-managed model/speech access. Add your OpenAI provide
 
 - Patient endpoints are not anonymous. A bearer key is required even for reads.
 - Vapi uses a different bearer secret, so reviewer API access cannot forge voice webhooks.
-- Every caller-influenced field is validated again at the server boundary.
+- Every caller-influenced field is validated again at the server boundary; unknown fields, control characters, invalid NANP numbers, and oversized bodies are rejected.
 - SQL values use prepared statements; dynamic column names come only from a fixed allowlist.
-- Writes require explicit confirmation; a prompt instruction alone is not trusted.
-- Vapi tool-call IDs are idempotency keys, preventing common retry duplication.
-- Deletes are reversible soft deletes.
+- Writes require explicit confirmation; updates to an existing record also require a caller-stated matching date of birth. Prompt instructions alone are not trusted.
+- Vapi call IDs are idempotency keys, preventing common retry duplication; reusing a key with different data is rejected.
+- A database-level partial unique index prevents concurrent active records with the same phone number. Deletes remain reversible soft deletes.
 - Recording is disabled. Transcripts are stored because the assessment explicitly rewards them.
 - Database failures produce a spoken failure instruction; the agent must not claim registration succeeded.
 - If a call drops before confirmation, no patient is written. The end-of-call report can still preserve the transcript for debugging.

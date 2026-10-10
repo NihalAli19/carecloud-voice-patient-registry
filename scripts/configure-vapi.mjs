@@ -10,6 +10,22 @@ if (missing.length) {
 const apiKey = process.env.VAPI_API_KEY;
 const baseUrl = process.env.PUBLIC_BASE_URL.replace(/\/$/, "");
 const webhookSecret = process.env.VAPI_WEBHOOK_SECRET;
+const placeholder = /^(?:replace|example|test|your|change-me|<)/i;
+let parsedBaseUrl;
+try {
+  parsedBaseUrl = new URL(baseUrl);
+} catch {
+  console.error("PUBLIC_BASE_URL must be a valid absolute URL.");
+  process.exit(1);
+}
+if (parsedBaseUrl.protocol !== "https:" || parsedBaseUrl.username || parsedBaseUrl.password || parsedBaseUrl.search || parsedBaseUrl.hash) {
+  console.error("PUBLIC_BASE_URL must be a clean HTTPS origin without credentials, a query, or a fragment.");
+  process.exit(1);
+}
+if (apiKey.length < 20 || placeholder.test(apiKey) || webhookSecret.length < 24 || placeholder.test(webhookSecret)) {
+  console.error("Vapi and webhook credentials must be non-placeholder secrets of adequate length.");
+  process.exit(1);
+}
 const prompt = await readFile(new URL("../config/assistant-prompt.md", import.meta.url), "utf8");
 const webhookServer = {
   url: `${baseUrl}/webhooks/vapi`,
@@ -57,9 +73,9 @@ const payload = {
     maxTokens: 500,
     messages: [{ role: "system", content: prompt }],
     tools: [
-      functionTool("lookup_patient_by_phone", "Look up an existing active patient immediately after obtaining a valid phone number.", { phone_number: { type: "string", description: "10-digit US phone number stated by the caller." } }, ["phone_number"]),
+      functionTool("lookup_patient_by_phone", "Look up an existing active patient after obtaining both phone number and date of birth. Identity is verified only when both match.", { phone_number: { type: "string", description: "10-digit US phone number stated by the caller." }, date_of_birth: { type: "string", description: "Date of birth stated by the caller, exactly MM/DD/YYYY." } }, ["phone_number", "date_of_birth"]),
       functionTool("register_patient", "Persist a new patient only after a complete readback and explicit caller confirmation.", patientProperties, requiredPatient),
-      functionTool("update_patient", "Update confirmed fields for an existing patient only after a complete corrected readback and explicit confirmation.", { patient_id: { type: "string", description: "UUID returned by lookup_patient_by_phone." }, ...Object.fromEntries(Object.entries(patientProperties).map(([key, value]) => [key, key === "caller_confirmed" ? value : { ...value }])) }, ["patient_id", "caller_confirmed"]),
+      functionTool("update_patient", "Update confirmed fields for an existing patient only after matching the caller-provided date of birth and obtaining a complete corrected readback and explicit confirmation.", { patient_id: { type: "string", description: "UUID returned by lookup_patient_by_phone." }, verification_date_of_birth: { type: "string", description: "Date of birth stated again by the caller for identity verification, exactly MM/DD/YYYY." }, ...Object.fromEntries(Object.entries(patientProperties).map(([key, value]) => [key, key === "caller_confirmed" ? value : { ...value }])) }, ["patient_id", "verification_date_of_birth", "caller_confirmed"]),
       { type: "endCall" },
     ],
   },
@@ -68,7 +84,7 @@ const payload = {
   server: webhookServer,
   serverMessages: ["end-of-call-report"],
   silenceTimeoutSeconds: 30,
-  maxDurationSeconds: 900,
+  maxDurationSeconds: 600,
   backgroundDenoisingEnabled: true,
   recordingEnabled: false,
   metadata: { project: "carecloud-voice-patient-registry", environment: process.env.ENVIRONMENT || "production" },

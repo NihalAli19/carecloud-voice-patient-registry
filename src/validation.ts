@@ -8,16 +8,21 @@ const FULL_NAME = /^[A-Za-z]+(?:[ '\-][A-Za-z]+)*$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ZIP = /^\d{5}(?:-\d{4})?$/;
 const MEMBER_ID = /^[A-Za-z0-9]+$/;
+const SAFE_TEXT = /^[^\u0000-\u001F\u007F]*$/;
 
 const asText = (value: unknown): string | undefined =>
   typeof value === "string" ? value.trim() : undefined;
 
+function safeText(text: string | undefined, maxLength: number): boolean {
+  return Boolean(text && text.length <= maxLength && SAFE_TEXT.test(text));
+}
+
 export function normalizeUsPhone(value: unknown): string | undefined {
   const raw = asText(value);
-  if (!raw) return undefined;
+  if (!raw || /[A-Za-z]/.test(raw) || /[^0-9+().\-\s]/.test(raw)) return undefined;
   let digits = raw.replace(/\D/g, "");
   if (digits.length === 11 && digits.startsWith("1")) digits = digits.slice(1);
-  if (digits.length !== 10 || digits[0] === "0" || digits[0] === "1") return undefined;
+  if (digits.length !== 10 || digits[0] === "0" || digits[0] === "1" || digits[3] === "0" || digits[3] === "1") return undefined;
   return `+1${digits}`;
 }
 
@@ -69,17 +74,17 @@ function validateField(field: keyof PatientInput, input: Record<string, unknown>
     }
     case "email":
       if (value === undefined || value === null || text === "") return null;
-      if (!text || text.length > 254 || !EMAIL.test(text)) errors[field] = "Must be a valid email address.";
+      if (!text || text.length > 254 || !EMAIL.test(text) || !SAFE_TEXT.test(text)) errors[field] = "Must be a valid email address.";
       return text?.toLowerCase();
     case "address_line_1":
-      if (!text || text.length > 200) errors[field] = "Must be a street address between 1 and 200 characters.";
+      if (!safeText(text, 200)) errors[field] = "Must be a street address between 1 and 200 characters without control characters.";
       return text;
     case "address_line_2":
       if (value === undefined || value === null || text === "") return null;
-      if (!text || text.length > 100) errors[field] = "Must be no more than 100 characters.";
+      if (!safeText(text, 100)) errors[field] = "Must be no more than 100 characters and cannot contain control characters.";
       return text;
     case "city":
-      if (!text || text.length > 100) errors[field] = "Must be between 1 and 100 characters.";
+      if (!safeText(text, 100)) errors[field] = "Must be between 1 and 100 characters without control characters.";
       return text;
     case "state": {
       const state = text?.toUpperCase();
@@ -91,7 +96,7 @@ function validateField(field: keyof PatientInput, input: Record<string, unknown>
       return text;
     case "insurance_provider":
       if (value === undefined || value === null || text === "") return null;
-      if (!text || text.length > 100) errors[field] = "Must be no more than 100 characters.";
+      if (!safeText(text, 100)) errors[field] = "Must be no more than 100 characters and cannot contain control characters.";
       return text;
     case "insurance_member_id":
       if (value === undefined || value === null || text === "") return null;
@@ -99,7 +104,7 @@ function validateField(field: keyof PatientInput, input: Record<string, unknown>
       return text?.toUpperCase();
     case "preferred_language":
       if (value === undefined || value === null || text === "") return "English";
-      if (!text || text.length > 50) errors[field] = "Must be no more than 50 characters.";
+      if (!safeText(text, 50)) errors[field] = "Must be no more than 50 characters and cannot contain control characters.";
       return text;
     case "emergency_contact_name":
       if (value === undefined || value === null || text === "") return null;
@@ -116,11 +121,18 @@ const ALL_FIELDS: Array<keyof PatientInput> = [
   ...REQUIRED, "email", "address_line_2", "insurance_provider", "insurance_member_id",
   "preferred_language", "emergency_contact_name", "emergency_contact_phone",
 ];
+const FIELD_SET = new Set<string>(ALL_FIELDS);
+
+function unsupportedFields(source: Record<string, unknown>): string[] {
+  return Object.keys(source).filter((field) => !FIELD_SET.has(field)).sort();
+}
 
 export function validatePatient(input: unknown): ValidationResult<PatientInput> {
   if (!input || typeof input !== "object" || Array.isArray(input)) return { errors: { body: "Expected a JSON object." } };
   const source = input as Record<string, unknown>;
   const errors: Record<string, string> = {};
+  const unsupported = unsupportedFields(source);
+  if (unsupported.length) errors.body = `Unsupported field${unsupported.length === 1 ? "" : "s"}: ${unsupported.join(", ")}.`;
   for (const field of REQUIRED) if (source[field] === undefined || source[field] === null || source[field] === "") errors[field] = "This field is required.";
   const output: Record<string, unknown> = {};
   for (const field of ALL_FIELDS) output[field] = validateField(field, source, errors);
@@ -131,6 +143,8 @@ export function validatePatientPatch(input: unknown): ValidationResult<PatientPa
   if (!input || typeof input !== "object" || Array.isArray(input)) return { errors: { body: "Expected a JSON object." } };
   const source = input as Record<string, unknown>;
   const errors: Record<string, string> = {};
+  const unsupported = unsupportedFields(source);
+  if (unsupported.length) errors.body = `Unsupported field${unsupported.length === 1 ? "" : "s"}: ${unsupported.join(", ")}.`;
   const output: Record<string, unknown> = {};
   for (const field of ALL_FIELDS) {
     if (!(field in source)) continue;

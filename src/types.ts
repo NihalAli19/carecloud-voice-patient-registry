@@ -63,5 +63,6 @@ export interface VapiMessage {
   };
   endedReason?: string;
   summary?: string;
+  analysis?: { summary?: string };
   status?: string;
 }

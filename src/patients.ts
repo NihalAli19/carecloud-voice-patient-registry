@@ -8,16 +8,52 @@ const PATIENT_COLUMNS = [
   "created_at", "updated_at", "deleted_at",
 ] as const;
 
-const MUTABLE_COLUMNS = new Set([
+const INPUT_COLUMNS = [
   "first_name", "last_name", "date_of_birth", "sex", "phone_number", "email", "address_line_1",
   "address_line_2", "city", "state", "zip_code", "insurance_provider", "insurance_member_id",
   "preferred_language", "emergency_contact_name", "emergency_contact_phone",
-]);
+] as const satisfies readonly (keyof PatientInput)[];
+
+const MUTABLE_COLUMNS = new Set<string>(INPUT_COLUMNS);
+
+export class DuplicatePatientError extends Error {
+  constructor(public readonly patientId: string) {
+    super("An active patient already uses that phone number.");
+    this.name = "DuplicatePatientError";
+  }
+}
+
+export class IdempotencyConflictError extends Error {
+  constructor() {
+    super("The Idempotency-Key was already used with a different patient payload.");
+    this.name = "IdempotencyConflictError";
+  }
+}
 
 export type PublicPatient = Omit<PatientRow, "date_of_birth"> & { date_of_birth: string };
 
+type DeduplicationRow = PatientRow & { request_fingerprint: string | null };
+
 export function toPublicPatient(row: PatientRow): PublicPatient {
   return { ...row, date_of_birth: formatDateOfBirth(row.date_of_birth) };
+}
+
+async function patientFingerprint(input: PatientInput): Promise<string> {
+  const canonical = JSON.stringify(INPUT_COLUMNS.map((key) => [key, input[key] ?? null]));
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function getDeduplication(db: D1Database, key: string): Promise<DeduplicationRow | null> {
+  return db.prepare(
+    `SELECT d.request_fingerprint, p.${PATIENT_COLUMNS.join(", p.")} FROM request_deduplication d JOIN patients p ON p.patient_id = d.patient_id WHERE d.idempotency_key = ?`,
+  ).bind(key).first<DeduplicationRow>();
+}
+
+function replayOrConflict(prior: DeduplicationRow | null, fingerprint: string): { row: PatientRow; replayed: true } | null {
+  if (!prior) return null;
+  if (prior.request_fingerprint && prior.request_fingerprint !== fingerprint) throw new IdempotencyConflictError();
+  return { row: prior, replayed: true };
 }
 
 export async function getPatient(db: D1Database, patientId: string, includeDeleted = false): Promise<PatientRow | null> {
@@ -68,12 +104,14 @@ export async function createPatient(
   input: PatientInput,
   idempotencyKey?: string,
 ): Promise<{ row: PatientRow; replayed: boolean }> {
-  if (idempotencyKey) {
-    const prior = await db.prepare(
-      `SELECT p.${PATIENT_COLUMNS.join(", p.")} FROM request_deduplication d JOIN patients p ON p.patient_id = d.patient_id WHERE d.idempotency_key = ?`,
-    ).bind(idempotencyKey).first<PatientRow>();
-    if (prior) return { row: prior, replayed: true };
+  const fingerprint = idempotencyKey ? await patientFingerprint(input) : undefined;
+  if (idempotencyKey && fingerprint) {
+    const replay = replayOrConflict(await getDeduplication(db, idempotencyKey), fingerprint);
+    if (replay) return replay;
   }
+
+  const duplicate = await findByPhone(db, input.phone_number);
+  if (duplicate) throw new DuplicatePatientError(duplicate.patient_id);
 
   const patientId = crypto.randomUUID();
   const now = new Date().toISOString();
@@ -88,23 +126,26 @@ export async function createPatient(
     `INSERT INTO patients (${PATIENT_COLUMNS.join(", ")}) VALUES (${PATIENT_COLUMNS.map(() => "?").join(", ")})`,
   ).bind(...values);
 
-  if (idempotencyKey) {
-    try {
+  try {
+    if (idempotencyKey && fingerprint) {
       await db.batch([
         insert,
-        db.prepare("INSERT INTO request_deduplication (idempotency_key, patient_id, created_at) VALUES (?, ?, ?)")
-          .bind(idempotencyKey, patientId, now),
+        db.prepare("INSERT INTO request_deduplication (idempotency_key, patient_id, created_at, request_fingerprint) VALUES (?, ?, ?, ?)")
+          .bind(idempotencyKey, patientId, now, fingerprint),
       ]);
-    } catch (error) {
-      const prior = await db.prepare(
-        `SELECT p.${PATIENT_COLUMNS.join(", p.")} FROM request_deduplication d JOIN patients p ON p.patient_id = d.patient_id WHERE d.idempotency_key = ?`,
-      ).bind(idempotencyKey).first<PatientRow>();
-      if (prior) return { row: prior, replayed: true };
-      throw error;
+    } else {
+      await insert.run();
     }
-  } else {
-    await insert.run();
+  } catch (error) {
+    if (idempotencyKey && fingerprint) {
+      const replay = replayOrConflict(await getDeduplication(db, idempotencyKey), fingerprint);
+      if (replay) return replay;
+    }
+    const conflicting = await findByPhone(db, input.phone_number);
+    if (conflicting) throw new DuplicatePatientError(conflicting.patient_id);
+    throw error;
   }
+
   const row = await getPatient(db, patientId, true);
   if (!row) throw new Error("Patient insert completed but the record could not be read back.");
   return { row, replayed: false };
@@ -113,12 +154,28 @@ export async function createPatient(
 export async function updatePatient(db: D1Database, patientId: string, patch: PatientPatch): Promise<PatientRow | null> {
   const entries = Object.entries(patch).filter(([key]) => MUTABLE_COLUMNS.has(key));
   if (!entries.length) return getPatient(db, patientId);
+
+  if (patch.phone_number) {
+    const conflicting = await db.prepare(
+      "SELECT patient_id FROM patients WHERE phone_number = ? AND patient_id <> ? AND deleted_at IS NULL LIMIT 1",
+    ).bind(patch.phone_number, patientId).first<{ patient_id: string }>();
+    if (conflicting) throw new DuplicatePatientError(conflicting.patient_id);
+  }
+
   const assignments = entries.map(([key]) => `${key} = ?`);
   const now = new Date().toISOString();
-  const result = await db.prepare(
-    `UPDATE patients SET ${assignments.join(", ")}, updated_at = ? WHERE patient_id = ? AND deleted_at IS NULL`,
-  ).bind(...entries.map(([, value]) => value ?? null), now, patientId).run();
-  if (!result.meta.changes) return null;
+  try {
+    const result = await db.prepare(
+      `UPDATE patients SET ${assignments.join(", ")}, updated_at = ? WHERE patient_id = ? AND deleted_at IS NULL`,
+    ).bind(...entries.map(([, value]) => value ?? null), now, patientId).run();
+    if (!result.meta.changes) return null;
+  } catch (error) {
+    if (patch.phone_number) {
+      const conflicting = await findByPhone(db, patch.phone_number);
+      if (conflicting && conflicting.patient_id !== patientId) throw new DuplicatePatientError(conflicting.patient_id);
+    }
+    throw error;
+  }
   return getPatient(db, patientId);
 }
 
@@ -154,7 +211,7 @@ export async function recordCallReport(db: D1Database, data: {
     VALUES (?, ?, 'ended', ?, ?, ?, ?, ?, ?)
     ON CONFLICT(call_id) DO UPDATE SET caller_number = COALESCE(excluded.caller_number, call_sessions.caller_number), status = 'ended', ended_at = excluded.ended_at, ended_reason = excluded.ended_reason, transcript = excluded.transcript, summary = excluded.summary, updated_at = excluded.updated_at
   `).bind(
-    data.callId, data.callerNumber ?? null, now, data.endedReason ?? null,
+    data.callId, data.callerNumber ?? null, now, data.endedReason?.slice(0, 200) ?? null,
     data.transcript?.slice(0, 100_000) ?? null, data.summary?.slice(0, 5_000) ?? null, now, now,
   ).run();
 }

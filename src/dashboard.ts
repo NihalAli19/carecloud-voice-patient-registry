@@ -1,11 +1,12 @@
-export const dashboardHtml = String.raw`<!doctype html>
+export function dashboardHtml(nonce: string): string {
+  return String.raw`<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="CareCloud voice patient registration operations dashboard">
   <title>CareCloud Voice Registry</title>
-  <style>
+  <style nonce="${nonce}">
     :root{--ink:#17242d;--muted:#66747d;--paper:#f5f4ef;--card:#fff;--line:#d9ddd8;--teal:#087f72;--teal2:#00a894;--navy:#183a4a;--orange:#f28c45;--red:#b63745;--shadow:0 16px 50px rgba(23,36,45,.09)}
     *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     button,input{font:inherit}.shell{min-height:100vh}.topbar{background:var(--navy);color:#fff;padding:20px clamp(20px,5vw,72px);display:flex;align-items:center;justify-content:space-between;gap:20px}
@@ -36,12 +37,12 @@ export const dashboardHtml = String.raw`<!doctype html>
     <div class="notice"><strong>Demonstration environment.</strong> Use synthetic patient data only. This assessment deployment is not configured for HIPAA-regulated production data.</div>
   </main>
 </div>
-<div class="overlay" id="auth"><form class="login" id="login"><div class="eyebrow">Authorized access</div><h2>Open the registry</h2><p>Enter the API key supplied with the assessment. It is kept only in this browser tab.</p><input id="token" type="password" autocomplete="current-password" placeholder="Bearer API key" required><div class="error" id="authError"></div><button type="submit">Continue</button></form></div>
+<div class="overlay" id="auth"><form class="login" id="login"><div class="eyebrow">Authorized access</div><h2>Open the registry</h2><p>Enter the API key supplied with the assessment. It is kept only in this browser tab.</p><input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="Bearer API key" required><div class="error" id="authError"></div><button type="submit">Continue</button></form></div>
 <div class="drawer" id="drawer" hidden><article class="drawer-card"><div class="drawer-head"><div><div class="eyebrow">Patient record</div><h2 id="detailName">Patient</h2></div><button class="close" id="close" aria-label="Close details">×</button></div><div id="details"></div></article></div>
-<script>
+<script nonce="${nonce}">
 const state={token:sessionStorage.getItem('carecloud_api_key')||'',patients:[],calls:[]};
 const $=s=>document.querySelector(s); const esc=v=>String(v??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-async function api(path){const r=await fetch(path,{headers:{Authorization:'Bearer '+state.token}});if(r.status===401)throw new Error('unauthorized');const body=await r.json();if(!r.ok)throw new Error(body.error?.message||'Request failed');return body.data}
+async function api(path){const r=await fetch(path,{headers:{Authorization:'Bearer '+state.token}});if(r.status===401){state.token='';sessionStorage.removeItem('carecloud_api_key');throw new Error('unauthorized');}const body=await r.json();if(!r.ok)throw new Error(body.error?.message||'Request failed');return body.data}
 function fmtDate(v){if(!v)return '—';const d=new Date(v);return isNaN(d)?v:new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric'}).format(d)}
 function fmtPhone(v){const d=String(v||'').replace(/\D/g,'').slice(-10);return d.length===10?'('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6):v||'—'}
 function render(){const body=$('#rows');if(!state.patients.length){body.innerHTML='<tr><td colspan="6" class="empty">No matching patients found.</td></tr>'}else body.innerHTML=state.patients.map(p=>'<tr data-id="'+esc(p.patient_id)+'"><td><span class="name">'+esc(p.first_name)+' '+esc(p.last_name)+'</span><br><span class="muted">'+esc(p.sex)+'</span></td><td>'+esc(p.date_of_birth)+'</td><td>'+esc(fmtPhone(p.phone_number))+'</td><td>'+esc(p.city)+', '+esc(p.state)+'</td><td><span class="badge">'+esc(p.preferred_language)+'</span></td><td>'+esc(fmtDate(p.created_at))+'</td></tr>').join('');
@@ -52,3 +53,4 @@ function show(id){const p=state.patients.find(x=>x.patient_id===id);if(!p)return
 $('#login').addEventListener('submit',e=>{e.preventDefault();state.token=$('#token').value.trim();sessionStorage.setItem('carecloud_api_key',state.token);load()});$('#filters').addEventListener('submit',e=>{e.preventDefault();load()});$('#refresh').addEventListener('click',load);$('#close').addEventListener('click',()=>$('#drawer').hidden=true);$('#drawer').addEventListener('click',e=>{if(e.target.id==='drawer')e.currentTarget.hidden=true});if(state.token)load();
 </script>
 </body></html>`;
+}
