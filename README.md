@@ -8,7 +8,7 @@ A voice-based patient registration demo built for the CareCloud AI Engineer asse
 
 Fill these in after deployment:
 
-- **Repository:** `https://github.com/<user>/<repo>`
+- **Repository:** `https://github.com/NihalAli19/carecloud-voice-patient-registry`
 - **U.S. phone number:** `+1 (...) ...-....`
 - **API base URL:** `https://carecloud-voice-patient-registry.<account>.workers.dev`
 - **Dashboard:** `https://carecloud-voice-patient-registry.<account>.workers.dev/dashboard`
