@@ -10,9 +10,9 @@ invocation_logs = true
 [[d1_databases]]
 binding = "DB"
 database_name = "carecloud-patient-registry"
-database_id = "REPLACE_AFTER_RUNNING_WRANGLER_D1_CREATE"
+database_id = "ee4478fe-09d8-4527-bc44-46a2c6c561ef"
 migrations_dir = "migrations"
 
 [vars]
-ENVIRONMENT = "development"
+ENVIRONMENT = "production"
 ALLOWED_ORIGIN = ""
