@@ -2,6 +2,7 @@ name = "carecloud-voice-patient-registry"
 main = "src/index.ts"
 compatibility_date = "2026-10-10"
 workers_dev = true
+preview_urls = false
 
 [observability.logs]
 enabled = true
