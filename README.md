@@ -10,8 +10,8 @@ Fill these in after deployment:
 
 - **Repository:** `https://github.com/NihalAli19/carecloud-voice-patient-registry`
 - **U.S. phone number:** `+1 (...) ...-....`
-- **API base URL:** `https://carecloud-voice-patient-registry.<account>.workers.dev`
-- **Dashboard:** `https://carecloud-voice-patient-registry.<account>.workers.dev/dashboard`
+- **API base URL:** `https://carecloud-voice-patient-registry.nihalaliytt.workers.dev`
+- **Dashboard:** `https://carecloud-voice-patient-registry.nihalaliytt.workers.dev/dashboard`
 - **API credential:** provide the reviewer with the production `API_KEY` through a private channel
 
 ## Architecture
@@ -154,7 +154,7 @@ PowerShell example:
 
 ```powershell
 $env:VAPI_API_KEY = "your-private-vapi-key"
-$env:PUBLIC_BASE_URL = "https://carecloud-voice-patient-registry.<account>.workers.dev"
+$env:PUBLIC_BASE_URL = "https://carecloud-voice-patient-registry.nihalaliytt.workers.dev"
 $env:VAPI_WEBHOOK_SECRET = "the-same-secret-stored-in-cloudflare"
 node scripts/configure-vapi.mjs
 ```
