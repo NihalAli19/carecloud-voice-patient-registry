@@ -1,11 +1,50 @@
+# Dependencies and generated output
 node_modules/
+dist/
+coverage/
+.cache/
+.turbo/
+*.tsbuildinfo
+
+# Cloudflare local state and local-only configuration
 .wrangler/
 .dev.vars
+.dev.vars.*
+wrangler.local.toml
+wrangler.*.local.toml
+
+# Environment files: never commit real values; keep only the placeholder template
 .env
 .env.*
 !.env.example
-dist/
-coverage/
+
+# Credentials, private keys, and local secret stores
+.secrets/
+secrets/
+credentials/
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+service-account*.json
+*-credentials.json
+
+# Logs and test artifacts
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+test-results/
+playwright-report/
+
+# Editor and operating-system files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
 .DS_Store
 Thumbs.db
