@@ -28,6 +28,11 @@ flowchart LR
 
 One Worker owns routing, validation, persistence, Vapi webhooks, OpenAPI output, and the dashboard. This deliberately avoids microservices: they would add deployment and failure points without improving a three-hour assessment.
 
+Operational references:
+
+- [Test plan](docs/TESTING.md)
+- [Security policy](SECURITY.md)
+
 ## Why this stack
 
 | Layer | Choice | Honest rationale |

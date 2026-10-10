@@ -50,6 +50,9 @@ test("dashboard nonce matches the CSP and internal header is removed", () => {
   const html = dashboardHtml(nonce);
   assert.match(html, /<style nonce="fixed-test-nonce">/);
   assert.match(html, /<script nonce="fixed-test-nonce">/);
+  const browserScript = /<script nonce="[^"]+">([\s\S]*)<\/script>/.exec(html)?.[1];
+  assert.ok(browserScript);
+  assert.doesNotThrow(() => new Function(browserScript));
   const response = withSecurityHeaders(
     new Response(html, { headers: { "x-content-security-nonce": nonce } }),
     new Request("https://example.test/dashboard"),

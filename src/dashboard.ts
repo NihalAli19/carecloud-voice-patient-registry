@@ -5,52 +5,413 @@ export function dashboardHtml(nonce: string): string {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="CareCloud voice patient registration operations dashboard">
-  <title>CareCloud Voice Registry</title>
+  <title>CareCloud | Voice Intake Registry</title>
   <style nonce="${nonce}">
-    :root{--ink:#17242d;--muted:#66747d;--paper:#f5f4ef;--card:#fff;--line:#d9ddd8;--teal:#087f72;--teal2:#00a894;--navy:#183a4a;--orange:#f28c45;--red:#b63745;--shadow:0 16px 50px rgba(23,36,45,.09)}
-    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    button,input{font:inherit}.shell{min-height:100vh}.topbar{background:var(--navy);color:#fff;padding:20px clamp(20px,5vw,72px);display:flex;align-items:center;justify-content:space-between;gap:20px}
-    .brand{display:flex;align-items:center;gap:12px;font-weight:750;letter-spacing:-.02em}.mark{width:36px;height:36px;border-radius:11px;background:linear-gradient(145deg,#2de0c8,var(--teal));display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
-    .status{display:flex;align-items:center;gap:8px;font-size:13px;color:#cce5e1}.dot{width:8px;height:8px;border-radius:50%;background:#39d7a2;box-shadow:0 0 0 5px rgba(57,215,162,.13)}
-    main{max-width:1320px;margin:auto;padding:42px clamp(20px,5vw,72px) 70px}.eyebrow{text-transform:uppercase;letter-spacing:.13em;color:var(--teal);font-size:12px;font-weight:800}.hero{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:28px}
-    h1{font-family:Georgia,serif;font-weight:500;font-size:clamp(34px,5vw,58px);line-height:1.04;letter-spacing:-.035em;margin:6px 0 8px}.sub{color:var(--muted);max-width:650px;margin:0}.refresh{border:0;background:var(--ink);color:#fff;padding:11px 16px;border-radius:11px;cursor:pointer;font-weight:700}.refresh:hover{background:var(--teal)}
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:25px 0}.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 3px 16px rgba(23,36,45,.025)}.stat small{display:block;color:var(--muted);font-weight:650}.stat strong{font:500 34px/1.2 Georgia,serif}.stat .accent{color:var(--teal)}
-    .panel{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}.tools{padding:18px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line);background:#fbfbf8}.field{position:relative;flex:1;min-width:180px}.field label{position:absolute;left:12px;top:5px;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:750}.field input{width:100%;height:50px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:19px 12px 5px;color:var(--ink);outline:0}.field input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(8,127,114,.1)}.search{border:0;border-radius:10px;padding:0 20px;background:var(--teal);color:#fff;font-weight:750;cursor:pointer}
-    .table-wrap{overflow:auto;min-height:280px}table{width:100%;border-collapse:collapse;text-align:left}th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:13px 18px;background:#fbfbf8;border-bottom:1px solid var(--line)}td{padding:15px 18px;border-bottom:1px solid #eceeeb;white-space:nowrap}tr[data-id]{cursor:pointer}tr[data-id]:hover{background:#f4fbf9}.name{font-weight:760}.muted{color:var(--muted)}.badge{font-size:12px;border-radius:99px;padding:5px 9px;background:#e5f5f1;color:#087064;font-weight:700}.empty{padding:70px 20px;text-align:center;color:var(--muted)}
-    .foot{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;color:var(--muted);font-size:13px}.notice{margin-top:18px;padding:13px 16px;border-left:3px solid var(--orange);background:#fff8f1;color:#6e4b30;border-radius:0 10px 10px 0;font-size:13px}
-    .overlay{position:fixed;inset:0;background:rgba(15,28,35,.64);backdrop-filter:blur(8px);display:grid;place-items:center;padding:20px;z-index:10}.overlay[hidden],.drawer[hidden]{display:none}.login{width:min(440px,100%);background:#fff;border-radius:22px;padding:30px;box-shadow:0 30px 100px rgba(0,0,0,.3)}.login h2{font:500 32px Georgia,serif;margin:10px 0}.login p{color:var(--muted)}.login input{width:100%;padding:13px;border:1px solid var(--line);border-radius:10px}.login button{margin-top:10px;width:100%;padding:13px;border:0;border-radius:10px;background:var(--teal);color:#fff;font-weight:800;cursor:pointer}.error{color:var(--red);font-size:13px;min-height:20px}
-    .drawer{position:fixed;inset:0;background:rgba(15,28,35,.4);z-index:9;display:flex;justify-content:flex-end}.drawer-card{height:100%;width:min(560px,100%);background:#fff;padding:28px;overflow:auto;box-shadow:-20px 0 60px rgba(0,0,0,.16)}.drawer-head{display:flex;align-items:start;justify-content:space-between}.close{border:0;background:#edf0ed;border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:20px}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px}.detail{border-top:1px solid var(--line);padding-top:10px}.detail small{display:block;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:10px}.detail strong{display:block;margin-top:3px;word-break:break-word}.section{margin-top:28px;font-size:12px;text-transform:uppercase;letter-spacing:.11em;color:var(--teal);font-weight:800}
-    @media(max-width:720px){.hero{align-items:start;flex-direction:column}.stats{grid-template-columns:1fr}.refresh{width:100%}.detail-grid{grid-template-columns:1fr}.topbar{padding:16px 20px}.status span:last-child{display:none}}
+    :root {
+      color-scheme: light;
+      --background: #f5f7f8;
+      --surface: #ffffff;
+      --surface-subtle: #f8fafb;
+      --text: #17242d;
+      --muted: #63717a;
+      --border: #dbe1e4;
+      --navy: #173746;
+      --teal: #087f72;
+      --teal-soft: #e8f5f2;
+      --warning-bg: #fff8eb;
+      --warning-border: #df9a35;
+      --danger: #b4233a;
+      --success: #17835f;
+      --shadow: 0 8px 28px rgba(23, 36, 45, 0.07);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--text);
+      font: 14px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input { font: inherit; }
+    button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid rgba(8, 127, 114, 0.25); outline-offset: 2px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    .shell { min-height: 100vh; }
+    .topbar {
+      min-height: 68px;
+      padding: 0 clamp(20px, 5vw, 64px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      background: var(--navy);
+      color: #fff;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+    .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 8px; font-size: 12px; letter-spacing: 0.03em; }
+    .brand-copy small { display: block; color: #bad0d9; font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
+    .top-actions { display: flex; align-items: center; gap: 16px; }
+    .service-status { display: flex; align-items: center; gap: 8px; color: #d4e2e7; font-size: 12px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #d6a548; }
+    .status-dot[data-state="healthy"] { background: #3bc58c; }
+    .status-dot[data-state="error"] { background: #f16c7e; }
+    .text-button { border: 0; padding: 7px 9px; background: transparent; color: #d4e2e7; cursor: pointer; }
+    .text-button:hover { color: #fff; }
+    main { width: min(1320px, 100%); margin: 0 auto; padding: 38px clamp(20px, 5vw, 64px) 64px; }
+    .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+    .eyebrow { color: var(--teal); font-size: 11px; font-weight: 800; letter-spacing: 0.11em; text-transform: uppercase; }
+    h1 { margin: 5px 0 7px; font-size: clamp(30px, 4vw, 44px); line-height: 1.12; letter-spacing: -0.025em; }
+    h2 { margin: 0; font-size: 18px; }
+    .sub { max-width: 700px; margin: 0; color: var(--muted); }
+    .primary-button { border: 0; border-radius: 8px; padding: 10px 15px; background: var(--teal); color: #fff; font-weight: 700; cursor: pointer; }
+    .primary-button:hover { background: #066d62; }
+    .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 22px; }
+    .metric { padding: 18px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+    .metric span { display: block; margin-bottom: 5px; color: var(--muted); font-size: 12px; font-weight: 650; }
+    .metric strong { font-size: 30px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+    .panel { margin-bottom: 22px; overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
+    .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 19px; border-bottom: 1px solid var(--border); }
+    .panel-heading p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .docs-link { color: var(--teal); font-size: 12px; font-weight: 700; text-decoration: none; }
+    .docs-link:hover { text-decoration: underline; }
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; padding: 16px 18px; background: var(--surface-subtle); border-bottom: 1px solid var(--border); }
+    .field { position: relative; flex: 1; min-width: 180px; }
+    .field label { position: absolute; left: 11px; top: 5px; color: var(--muted); font-size: 9px; font-weight: 750; letter-spacing: 0.07em; text-transform: uppercase; }
+    .field input { width: 100%; height: 48px; padding: 18px 11px 4px; background: #fff; border: 1px solid var(--border); border-radius: 8px; color: var(--text); }
+    .search-button { min-height: 48px; padding: 0 18px; border: 1px solid var(--teal); border-radius: 8px; background: var(--teal); color: #fff; font-weight: 700; cursor: pointer; }
+    .table-wrap { min-height: 160px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { padding: 11px 17px; background: var(--surface-subtle); border-bottom: 1px solid var(--border); color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+    td { padding: 13px 17px; border-bottom: 1px solid #edf0f1; white-space: nowrap; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tr[data-id] { cursor: pointer; }
+    tr[data-id]:hover { background: #f2faf8; }
+    .name { font-weight: 740; }
+    .muted { color: var(--muted); }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; background: var(--teal-soft); color: #076c62; font-size: 11px; font-weight: 700; }
+    .badge-neutral { background: #edf1f3; color: #52616a; }
+    .empty { padding: 44px 20px; color: var(--muted); text-align: center; }
+    .panel-footer { display: flex; justify-content: space-between; gap: 18px; padding: 12px 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+    .notice { padding: 13px 16px; border: 1px solid #f0d6a8; border-left: 4px solid var(--warning-border); border-radius: 8px; background: var(--warning-bg); color: #62491f; font-size: 12px; }
+    .overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 20px; background: rgba(17, 37, 47, 0.72); backdrop-filter: blur(5px); }
+    .overlay[hidden], .drawer[hidden] { display: none; }
+    .login { width: min(420px, 100%); padding: 28px; background: #fff; border-radius: 14px; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3); }
+    .login h2 { margin: 5px 0 8px; font-size: 26px; }
+    .login p { margin: 0 0 18px; color: var(--muted); }
+    .login input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
+    .login button { width: 100%; margin-top: 9px; }
+    .error { min-height: 20px; padding-top: 4px; color: var(--danger); font-size: 12px; }
+    .drawer { position: fixed; inset: 0; z-index: 9; display: flex; justify-content: flex-end; background: rgba(17, 37, 47, 0.48); }
+    .drawer-card { width: min(560px, 100%); height: 100%; padding: 28px; overflow-y: auto; background: #fff; box-shadow: -18px 0 50px rgba(0, 0, 0, 0.15); }
+    .drawer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+    .close { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 50%; background: #fff; cursor: pointer; font-size: 20px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
+    .detail { padding-top: 9px; border-top: 1px solid var(--border); }
+    .detail small { display: block; color: var(--muted); font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .detail strong { display: block; margin-top: 3px; overflow-wrap: anywhere; }
+    .section-label { margin-top: 25px; color: var(--teal); font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+    @media (max-width: 760px) {
+      .page-heading { align-items: stretch; flex-direction: column; }
+      .metrics { grid-template-columns: 1fr; }
+      .primary-button { width: 100%; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .topbar { padding: 0 18px; }
+      .service-status span:last-child { display: none; }
+      .panel-footer { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
 <div class="shell">
-  <header class="topbar"><div class="brand"><span class="mark" aria-hidden="true">✦</span><span>CareCloud Voice Registry</span></div><div class="status"><span class="dot"></span><span>API connected</span></div></header>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">CC</span>
+      <span class="brand-copy">Voice Intake Registry<small>CareCloud assessment</small></span>
+    </div>
+    <div class="top-actions">
+      <div class="service-status" id="serviceStatus" role="status" aria-live="polite">
+        <span class="status-dot" id="statusDot"></span><span id="statusText">Checking service</span>
+      </div>
+      <button class="text-button" id="signOut" type="button" hidden>Sign out</button>
+    </div>
+  </header>
+
   <main>
-    <section class="hero"><div><div class="eyebrow">Operations overview</div><h1>Patient registration,<br>without the paperwork.</h1><p class="sub">Voice-collected demographics and call outcomes, persisted securely and available for review.</p></div><button class="refresh" id="refresh">Refresh data</button></section>
-    <section class="stats" aria-label="Registry statistics"><div class="stat"><small>Active patients</small><strong id="patientCount">—</strong></div><div class="stat"><small>Registrations today</small><strong class="accent" id="todayCount">—</strong></div><div class="stat"><small>Recent calls</small><strong id="callCount">—</strong></div></section>
-    <section class="panel">
-      <form class="tools" id="filters"><div class="field"><label for="lastName">Last name</label><input id="lastName" name="last_name" autocomplete="off"></div><div class="field"><label for="dob">Date of birth</label><input id="dob" name="date_of_birth" placeholder="MM/DD/YYYY" autocomplete="off"></div><div class="field"><label for="phone">Phone</label><input id="phone" name="phone_number" placeholder="(555) 555-0123" autocomplete="off"></div><button class="search" type="submit">Search</button></form>
-      <div class="table-wrap"><table><thead><tr><th>Patient</th><th>Date of birth</th><th>Phone</th><th>Location</th><th>Language</th><th>Registered</th></tr></thead><tbody id="rows"><tr><td colspan="6" class="empty">Loading registry…</td></tr></tbody></table></div>
-      <div class="foot"><span id="resultCount">—</span><span>Encrypted in transit · Soft-delete enabled</span></div>
+    <section class="page-heading">
+      <div>
+        <div class="eyebrow">Operations dashboard</div>
+        <h1>Patient registration operations</h1>
+        <p class="sub">Review synthetic patient registrations and recent voice-call outcomes for this assessment environment.</p>
+      </div>
+      <button class="primary-button" id="refresh" type="button">Refresh data</button>
     </section>
-    <div class="notice"><strong>Demonstration environment.</strong> Use synthetic patient data only. This assessment deployment is not configured for HIPAA-regulated production data.</div>
+
+    <section class="metrics" aria-label="Registry metrics">
+      <article class="metric"><span>Active patients</span><strong id="patientCount">—</strong></article>
+      <article class="metric"><span>Matching results</span><strong id="visibleCount">—</strong></article>
+      <article class="metric"><span>Recent call sessions</span><strong id="callCount">—</strong></article>
+    </section>
+
+    <section class="panel" aria-labelledby="patientsHeading">
+      <header class="panel-heading">
+        <div><h2 id="patientsHeading">Patient registry</h2><p>Active records only. Select a row to review full details.</p></div>
+        <a class="docs-link" href="/docs">API documentation</a>
+      </header>
+      <form class="filters" id="filters">
+        <div class="field"><label for="lastName">Last name</label><input id="lastName" name="last_name" autocomplete="off"></div>
+        <div class="field"><label for="dob">Date of birth</label><input id="dob" name="date_of_birth" placeholder="MM/DD/YYYY" inputmode="numeric" autocomplete="off"></div>
+        <div class="field"><label for="phone">Phone</label><input id="phone" name="phone_number" placeholder="(555) 555-0123" inputmode="tel" autocomplete="off"></div>
+        <button class="search-button" type="submit">Apply filters</button>
+      </form>
+      <div class="table-wrap">
+        <table>
+          <caption class="sr-only">Active patient records</caption>
+          <thead><tr><th scope="col">Patient</th><th scope="col">Date of birth</th><th scope="col">Phone</th><th scope="col">Location</th><th scope="col">Language</th><th scope="col">Registered</th></tr></thead>
+          <tbody id="patientRows"><tr><td colspan="6" class="empty">Authenticate to load records.</td></tr></tbody>
+        </table>
+      </div>
+      <footer class="panel-footer"><span id="resultCount">—</span><span>Soft-delete enabled · API-key protected</span></footer>
+    </section>
+
+    <section class="panel" aria-labelledby="callsHeading">
+      <header class="panel-heading"><div><h2 id="callsHeading">Recent call activity</h2><p>Latest persisted call outcomes; transcripts are intentionally not displayed here.</p></div></header>
+      <div class="table-wrap">
+        <table>
+          <caption class="sr-only">Recent voice call sessions</caption>
+          <thead><tr><th scope="col">Time</th><th scope="col">Patient</th><th scope="col">Caller</th><th scope="col">Status</th><th scope="col">Ended reason</th></tr></thead>
+          <tbody id="callRows"><tr><td colspan="5" class="empty">Authenticate to load call activity.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="notice"><strong>Demonstration environment.</strong> Use synthetic data only. This deployment is not approved for real patient information or HIPAA-regulated workloads.</div>
   </main>
 </div>
-<div class="overlay" id="auth"><form class="login" id="login"><div class="eyebrow">Authorized access</div><h2>Open the registry</h2><p>Enter the API key supplied with the assessment. It is kept only in this browser tab.</p><input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="Bearer API key" required><div class="error" id="authError"></div><button type="submit">Continue</button></form></div>
-<div class="drawer" id="drawer" hidden><article class="drawer-card"><div class="drawer-head"><div><div class="eyebrow">Patient record</div><h2 id="detailName">Patient</h2></div><button class="close" id="close" aria-label="Close details">×</button></div><div id="details"></div></article></div>
+
+<div class="overlay" id="auth">
+  <form class="login" id="login">
+    <div class="eyebrow">Restricted access</div>
+    <h2>Sign in to the registry</h2>
+    <p>Enter the assessment API key. It is retained only in this browser tab.</p>
+    <label class="sr-only" for="token">API key</label>
+    <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="API key" required>
+    <div class="error" id="authError" role="alert"></div>
+    <button class="primary-button" type="submit">Continue</button>
+  </form>
+</div>
+
+<div class="drawer" id="drawer" hidden>
+  <article class="drawer-card" role="dialog" aria-modal="true" aria-labelledby="detailName">
+    <div class="drawer-head">
+      <div><div class="eyebrow">Patient record</div><h2 id="detailName">Patient</h2></div>
+      <button class="close" id="close" type="button" aria-label="Close patient details">×</button>
+    </div>
+    <div id="details"></div>
+  </article>
+</div>
+
 <script nonce="${nonce}">
-const state={token:sessionStorage.getItem('carecloud_api_key')||'',patients:[],calls:[]};
-const $=s=>document.querySelector(s); const esc=v=>String(v??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-async function api(path){const r=await fetch(path,{headers:{Authorization:'Bearer '+state.token}});if(r.status===401){state.token='';sessionStorage.removeItem('carecloud_api_key');throw new Error('unauthorized');}const body=await r.json();if(!r.ok)throw new Error(body.error?.message||'Request failed');return body.data}
-function fmtDate(v){if(!v)return '—';const d=new Date(v);return isNaN(d)?v:new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric'}).format(d)}
-function fmtPhone(v){const d=String(v||'').replace(/\D/g,'').slice(-10);return d.length===10?'('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6):v||'—'}
-function render(){const body=$('#rows');if(!state.patients.length){body.innerHTML='<tr><td colspan="6" class="empty">No matching patients found.</td></tr>'}else body.innerHTML=state.patients.map(p=>'<tr data-id="'+esc(p.patient_id)+'"><td><span class="name">'+esc(p.first_name)+' '+esc(p.last_name)+'</span><br><span class="muted">'+esc(p.sex)+'</span></td><td>'+esc(p.date_of_birth)+'</td><td>'+esc(fmtPhone(p.phone_number))+'</td><td>'+esc(p.city)+', '+esc(p.state)+'</td><td><span class="badge">'+esc(p.preferred_language)+'</span></td><td>'+esc(fmtDate(p.created_at))+'</td></tr>').join('');
-  $('#patientCount').textContent=state.total??state.patients.length;$('#todayCount').textContent=state.patients.filter(p=>new Date(p.created_at).toDateString()===new Date().toDateString()).length;$('#callCount').textContent=state.calls.length;$('#resultCount').textContent=(state.total??0)+' active record'+((state.total??0)===1?'':'s');
-  document.querySelectorAll('tr[data-id]').forEach(r=>r.addEventListener('click',()=>show(r.dataset.id)))}
-async function load(){const q=new URLSearchParams(new FormData($('#filters')));for(const [k,v] of [...q])if(!v)q.delete(k);q.set('limit','100');try{const [p,c]=await Promise.all([api('/patients?'+q),api('/calls?limit=25')]);state.patients=p.items;state.total=p.pagination.total;state.calls=c.items;$('#auth').hidden=true;render()}catch(e){if(e.message==='unauthorized'){$('#auth').hidden=false;$('#authError').textContent='That API key was rejected.'}else{$('#rows').innerHTML='<tr><td colspan="6" class="empty">Unable to load data. '+esc(e.message)+'</td></tr>'}}}
-function show(id){const p=state.patients.find(x=>x.patient_id===id);if(!p)return;$('#detailName').textContent=p.first_name+' '+p.last_name;const labels={patient_id:'Patient ID',date_of_birth:'Date of birth',sex:'Sex',phone_number:'Phone',email:'Email',address_line_1:'Address',address_line_2:'Address line 2',city:'City',state:'State',zip_code:'ZIP code',insurance_provider:'Insurance provider',insurance_member_id:'Member ID',preferred_language:'Preferred language',emergency_contact_name:'Emergency contact',emergency_contact_phone:'Emergency phone',created_at:'Created',updated_at:'Updated'};$('#details').innerHTML='<div class="section">Demographics & contact</div><div class="detail-grid">'+Object.entries(labels).map(([k,l])=>'<div class="detail"><small>'+esc(l)+'</small><strong>'+esc(k.includes('phone')?fmtPhone(p[k]):k.endsWith('_at')?fmtDate(p[k]):p[k])+'</strong></div>').join('')+'</div>';$('#drawer').hidden=false}
-$('#login').addEventListener('submit',e=>{e.preventDefault();state.token=$('#token').value.trim();sessionStorage.setItem('carecloud_api_key',state.token);load()});$('#filters').addEventListener('submit',e=>{e.preventDefault();load()});$('#refresh').addEventListener('click',load);$('#close').addEventListener('click',()=>$('#drawer').hidden=true);$('#drawer').addEventListener('click',e=>{if(e.target.id==='drawer')e.currentTarget.hidden=true});if(state.token)load();
+const state = {
+  token: sessionStorage.getItem('carecloud_api_key') || '',
+  patients: [],
+  calls: [],
+  total: 0
+};
+
+const $ = (selector) => document.querySelector(selector);
+const escapeHtml = (value) => String(value ?? '—').replace(/[&<>"']/g, (character) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[character]));
+
+function setServiceState(status, label) {
+  $('#statusDot').dataset.state = status;
+  $('#statusText').textContent = label;
+}
+
+async function checkHealth() {
+  try {
+    const response = await fetch('/health', { cache: 'no-store' });
+    const body = await response.json();
+    if (!response.ok || body.data?.status !== 'ok') throw new Error('unhealthy');
+    setServiceState('healthy', 'Service operational');
+  } catch {
+    setServiceState('error', 'Service unavailable');
+  }
+}
+
+async function api(path) {
+  const response = await fetch(path, {
+    cache: 'no-store',
+    headers: { Authorization: 'Bearer ' + state.token }
+  });
+  if (response.status === 401) {
+    state.token = '';
+    sessionStorage.removeItem('carecloud_api_key');
+    throw new Error('unauthorized');
+  }
+  const body = await response.json();
+  if (!response.ok) throw new Error(body.error?.message || 'Request failed');
+  return body.data;
+}
+
+function formatDate(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'
+  }).format(date);
+}
+
+function formatPhone(value) {
+  const digits = String(value || '').replace(/\D/g, '').slice(-10);
+  return digits.length === 10
+    ? '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6)
+    : value || '—';
+}
+
+function renderPatients() {
+  const rows = $('#patientRows');
+  if (!state.patients.length) {
+    rows.innerHTML = '<tr><td colspan="6" class="empty">No active patients match the current filters.</td></tr>';
+  } else {
+    rows.innerHTML = state.patients.map((patient) =>
+      '<tr data-id="' + escapeHtml(patient.patient_id) + '" tabindex="0">' +
+        '<td><span class="name">' + escapeHtml(patient.first_name) + ' ' + escapeHtml(patient.last_name) + '</span><br><span class="muted">' + escapeHtml(patient.sex) + '</span></td>' +
+        '<td>' + escapeHtml(patient.date_of_birth) + '</td>' +
+        '<td>' + escapeHtml(formatPhone(patient.phone_number)) + '</td>' +
+        '<td>' + escapeHtml(patient.city) + ', ' + escapeHtml(patient.state) + '</td>' +
+        '<td><span class="badge">' + escapeHtml(patient.preferred_language) + '</span></td>' +
+        '<td>' + escapeHtml(formatDate(patient.created_at)) + '</td>' +
+      '</tr>'
+    ).join('');
+  }
+  $('#patientCount').textContent = state.total;
+  $('#visibleCount').textContent = state.patients.length;
+  $('#resultCount').textContent = state.total + ' active record' + (state.total === 1 ? '' : 's');
+  document.querySelectorAll('tr[data-id]').forEach((row) => {
+    row.addEventListener('click', () => showPatient(row.dataset.id));
+    row.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        showPatient(row.dataset.id);
+      }
+    });
+  });
+}
+
+function renderCalls() {
+  const rows = $('#callRows');
+  if (!state.calls.length) {
+    rows.innerHTML = '<tr><td colspan="5" class="empty">No call sessions have been recorded.</td></tr>';
+  } else {
+    rows.innerHTML = state.calls.map((call) => {
+      const patientName = call.first_name || call.last_name
+        ? escapeHtml((call.first_name || '') + ' ' + (call.last_name || ''))
+        : '<span class="muted">Unlinked</span>';
+      const statusClass = call.status === 'ended' ? 'badge' : 'badge badge-neutral';
+      return '<tr>' +
+        '<td>' + escapeHtml(formatDate(call.ended_at || call.created_at)) + '</td>' +
+        '<td>' + patientName + '</td>' +
+        '<td>' + escapeHtml(formatPhone(call.caller_number)) + '</td>' +
+        '<td><span class="' + statusClass + '">' + escapeHtml(call.status) + '</span></td>' +
+        '<td>' + escapeHtml(call.ended_reason) + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+  $('#callCount').textContent = state.calls.length;
+}
+
+async function loadData() {
+  const query = new URLSearchParams(new FormData($('#filters')));
+  for (const [key, value] of [...query]) if (!value) query.delete(key);
+  query.set('limit', '100');
+  try {
+    const [patients, calls] = await Promise.all([
+      api('/patients?' + query),
+      api('/calls?limit=25')
+    ]);
+    state.patients = patients.items;
+    state.total = patients.pagination.total;
+    state.calls = calls.items;
+    $('#auth').hidden = true;
+    $('#signOut').hidden = false;
+    $('#authError').textContent = '';
+    renderPatients();
+    renderCalls();
+  } catch (error) {
+    if (error.message === 'unauthorized') {
+      $('#auth').hidden = false;
+      $('#signOut').hidden = true;
+      $('#authError').textContent = 'The API key was rejected.';
+      $('#token').focus();
+      return;
+    }
+    $('#patientRows').innerHTML = '<tr><td colspan="6" class="empty">Unable to load records: ' + escapeHtml(error.message) + '</td></tr>';
+    $('#callRows').innerHTML = '<tr><td colspan="5" class="empty">Unable to load call activity.</td></tr>';
+  }
+}
+
+function showPatient(id) {
+  const patient = state.patients.find((entry) => entry.patient_id === id);
+  if (!patient) return;
+  $('#detailName').textContent = patient.first_name + ' ' + patient.last_name;
+  const labels = {
+    patient_id: 'Patient ID', date_of_birth: 'Date of birth', sex: 'Sex', phone_number: 'Phone',
+    email: 'Email', address_line_1: 'Address', address_line_2: 'Address line 2', city: 'City',
+    state: 'State', zip_code: 'ZIP code', insurance_provider: 'Insurance provider',
+    insurance_member_id: 'Member ID', preferred_language: 'Preferred language',
+    emergency_contact_name: 'Emergency contact', emergency_contact_phone: 'Emergency phone',
+    created_at: 'Created', updated_at: 'Updated'
+  };
+  $('#details').innerHTML = '<div class="section-label">Demographics and contact</div><div class="detail-grid">' +
+    Object.entries(labels).map(([key, label]) => {
+      const value = key.includes('phone')
+        ? formatPhone(patient[key])
+        : key.endsWith('_at') ? formatDate(patient[key]) : patient[key];
+      return '<div class="detail"><small>' + escapeHtml(label) + '</small><strong>' + escapeHtml(value) + '</strong></div>';
+    }).join('') + '</div>';
+  $('#drawer').hidden = false;
+  $('#close').focus();
+}
+
+function closeDrawer() {
+  $('#drawer').hidden = true;
+}
+
+function signOut() {
+  state.token = '';
+  state.patients = [];
+  state.calls = [];
+  state.total = 0;
+  sessionStorage.removeItem('carecloud_api_key');
+  $('#token').value = '';
+  $('#authError').textContent = '';
+  $('#auth').hidden = false;
+  $('#signOut').hidden = true;
+  $('#patientRows').innerHTML = '<tr><td colspan="6" class="empty">Authenticate to load records.</td></tr>';
+  $('#callRows').innerHTML = '<tr><td colspan="5" class="empty">Authenticate to load call activity.</td></tr>';
+  $('#patientCount').textContent = '—';
+  $('#visibleCount').textContent = '—';
+  $('#callCount').textContent = '—';
+  $('#resultCount').textContent = '—';
+  $('#token').focus();
+}
+
+$('#login').addEventListener('submit', (event) => {
+  event.preventDefault();
+  state.token = $('#token').value.trim();
+  sessionStorage.setItem('carecloud_api_key', state.token);
+  loadData();
+});
+$('#filters').addEventListener('submit', (event) => { event.preventDefault(); loadData(); });
+$('#refresh').addEventListener('click', () => { checkHealth(); if (state.token) loadData(); });
+$('#signOut').addEventListener('click', signOut);
+$('#close').addEventListener('click', closeDrawer);
+$('#drawer').addEventListener('click', (event) => { if (event.target.id === 'drawer') closeDrawer(); });
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !$('#drawer').hidden) closeDrawer(); });
+
+checkHealth();
+if (state.token) loadData();
 </script>
-</body></html>`;
+</body>
+</html>`;
 }

@@ -29,8 +29,11 @@ const nonce = /'nonce-([^']+)'/.exec(csp)?.[1];
 requireCondition(health?.data?.status === "ok" && health?.data?.database === "connected", "Health payload is not healthy.");
 requireCondition(Boolean(nonce), "Dashboard CSP does not contain a nonce.");
 requireCondition(dashboard.includes(`<style nonce="${nonce}">`) && dashboard.includes(`<script nonce="${nonce}">`), "Dashboard HTML nonce does not match CSP.");
+requireCondition(dashboard.includes("Patient registration operations") && dashboard.includes("Recent call activity"), "Operations dashboard sections are incomplete.");
+requireCondition(dashboard.includes('id="serviceStatus"') && dashboard.includes('id="signOut"'), "Operational status or sign-out controls are missing.");
 requireCondition(!csp.includes("unsafe-inline") && csp.includes("frame-ancestors 'none'"), "Dashboard CSP is weaker than expected.");
-requireCondition(dashboardResponse.headers.get("strict-transport-security")?.includes("max-age=31536000"), "HSTS is missing.");
+const secureOrigin = new URL(baseUrl).protocol === "https:";
+if (secureOrigin) requireCondition(dashboardResponse.headers.get("strict-transport-security")?.includes("max-age=31536000"), "HSTS is missing.");
 requireCondition(dashboardResponse.headers.get("x-frame-options") === "DENY", "Frame protection is missing.");
 requireCondition(dashboardResponse.headers.get("cache-control")?.includes("no-store"), "No-store caching policy is missing.");
 requireCondition(docs.includes("Patient Registry API"), "Human API documentation is missing.");
@@ -42,7 +45,7 @@ console.log(JSON.stringify({
   dashboardStatus: dashboardResponse.status,
   docsStatus: docsResponse.status,
   openApiVersion: openApi.openapi,
-  hsts: true,
+  hsts: secureOrigin ? true : "not applicable on HTTP",
   nonceCsp: true,
   frameProtection: true,
   noStore: true,
