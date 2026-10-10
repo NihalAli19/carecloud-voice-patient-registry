@@ -35,7 +35,7 @@ const patientProperties = {
   preferred_language: optionalString("Preferred language; use English when skipped."),
   emergency_contact_name: optionalString("Emergency contact full name, or null when skipped."),
   emergency_contact_phone: optionalString("Emergency contact 10-digit US phone, or null."),
-  caller_confirmed: { type: "boolean", const: true, description: "True only after explicit confirmation of the complete readback." },
+  caller_confirmed: { type: "boolean", description: "Set true only after explicit confirmation of the complete readback." },
 };
 const requiredPatient = ["first_name", "last_name", "date_of_birth", "sex", "phone_number", "address_line_1", "city", "state", "zip_code", "caller_confirmed"];
 
