@@ -1,0 +1,26 @@
+{
+  "name": "carecloud-voice-patient-registry",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Voice AI patient registration assessment: Vapi, Cloudflare Workers, D1, REST API, and dashboard.",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "deploy": "wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply carecloud-patient-registry --local",
+    "db:migrate:remote": "wrangler d1 migrations apply carecloud-patient-registry --remote",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "check": "npm run typecheck && npm test"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261010.1",
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.149.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
