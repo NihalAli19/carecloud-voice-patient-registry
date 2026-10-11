@@ -46,7 +46,7 @@ export function dashboardHtml(nonce: string): string {
       color: #fff;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
-    .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+    .brand { display: flex; align-items: center; gap: 12px; color: inherit; font-weight: 700; text-decoration: none; }
     .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 8px; font-size: 12px; letter-spacing: 0.03em; }
     .brand-copy small { display: block; color: #bad0d9; font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
     .top-actions { display: flex; align-items: center; gap: 16px; }
@@ -54,7 +54,7 @@ export function dashboardHtml(nonce: string): string {
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #d6a548; }
     .status-dot[data-state="healthy"] { background: #3bc58c; }
     .status-dot[data-state="error"] { background: #f16c7e; }
-    .text-button { border: 0; padding: 7px 9px; background: transparent; color: #d4e2e7; cursor: pointer; }
+    .text-button { border: 0; padding: 7px 9px; background: transparent; color: #d4e2e7; cursor: pointer; font: inherit; text-decoration: none; }
     .text-button:hover { color: #fff; }
     main { width: min(1320px, 100%); margin: 0 auto; padding: 38px clamp(20px, 5vw, 64px) 64px; }
     .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
@@ -99,6 +99,8 @@ export function dashboardHtml(nonce: string): string {
     .login p { margin: 0 0 18px; color: var(--muted); }
     .login input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
     .login button { width: 100%; margin-top: 9px; }
+    .back-link { display: block; margin-top: 14px; color: var(--teal); font-size: 12px; font-weight: 700; text-align: center; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
     .error { min-height: 20px; padding-top: 4px; color: var(--danger); font-size: 12px; }
     .drawer { position: fixed; inset: 0; z-index: 9; display: flex; justify-content: flex-end; background: rgba(17, 37, 47, 0.48); }
     .drawer-card { width: min(560px, 100%); height: 100%; padding: 28px; overflow-y: auto; background: #fff; box-shadow: -18px 0 50px rgba(0, 0, 0, 0.15); }
@@ -123,14 +125,15 @@ export function dashboardHtml(nonce: string): string {
 <body>
 <div class="shell">
   <header class="topbar">
-    <div class="brand">
+    <a class="brand" href="/" aria-label="Back to assessment overview">
       <span class="brand-mark" aria-hidden="true">CC</span>
       <span class="brand-copy">Voice Intake Registry<small>CareCloud assessment</small></span>
-    </div>
+    </a>
     <div class="top-actions">
       <div class="service-status" id="serviceStatus" role="status" aria-live="polite">
         <span class="status-dot" id="statusDot"></span><span id="statusText">Checking service</span>
       </div>
+      <a class="text-button" href="/">Overview</a>
       <button class="text-button" id="signOut" type="button" hidden>Sign out</button>
     </div>
   </header>
@@ -196,6 +199,7 @@ export function dashboardHtml(nonce: string): string {
     <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="API key" required>
     <div class="error" id="authError" role="alert"></div>
     <button class="primary-button" type="submit">Continue</button>
+    <a class="back-link" href="/">Back to assessment overview</a>
   </form>
 </div>
 
@@ -379,21 +383,8 @@ function closeDrawer() {
 
 function signOut() {
   state.token = '';
-  state.patients = [];
-  state.calls = [];
-  state.total = 0;
   sessionStorage.removeItem('carecloud_api_key');
-  $('#token').value = '';
-  $('#authError').textContent = '';
-  $('#auth').hidden = false;
-  $('#signOut').hidden = true;
-  $('#patientRows').innerHTML = '<tr><td colspan="6" class="empty">Authenticate to load records.</td></tr>';
-  $('#callRows').innerHTML = '<tr><td colspan="5" class="empty">Authenticate to load call activity.</td></tr>';
-  $('#patientCount').textContent = '—';
-  $('#visibleCount').textContent = '—';
-  $('#callCount').textContent = '—';
-  $('#resultCount').textContent = '—';
-  $('#token').focus();
+  window.location.assign('/');
 }
 
 $('#login').addEventListener('submit', (event) => {

@@ -32,6 +32,7 @@ npm run dev
 
 Open these URLs:
 
+- `http://localhost:8787/`
 - `http://localhost:8787/health`
 - `http://localhost:8787/dashboard`
 - `http://localhost:8787/docs`
@@ -39,10 +40,11 @@ Open these URLs:
 
 Acceptance checks:
 
+- The overview explains the call-to-dashboard journey, displays the synthetic-data warning, and reports live service health.
 - Health reports `ok` and `database: connected`.
 - The dashboard reports the real service status rather than a static success label.
 - An invalid API key is rejected.
-- Sign out removes the key from the browser session and returns to the login screen.
+- Sign out removes the key from the browser session and returns to the assessment overview.
 - Patient filters and row details work at desktop and mobile widths.
 - Recent calls are displayed without transcript content.
 
@@ -68,7 +70,7 @@ $env:PUBLIC_BASE_URL = "https://carecloud-voice-patient-registry.nihalaliytt.wor
 npm run verify:public
 ```
 
-Expected result: health, database connectivity, dashboard, documentation, OpenAPI, HSTS, CSP nonce, anti-framing, and no-store checks all pass.
+Expected result: overview journey, health, database connectivity, dashboard return path, documentation, OpenAPI, HSTS, CSP nonces, anti-framing, and no-store checks all pass.
 
 ## 5. Real phone test
 

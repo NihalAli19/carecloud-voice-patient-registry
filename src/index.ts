@@ -1,4 +1,5 @@
 import { dashboardHtml } from "./dashboard";
+import { landingHtml } from "./landing";
 import { docsHtml, openApiDocument } from "./openapi";
 import {
   createPatient,
@@ -118,7 +119,11 @@ function htmlResponse(content: string, nonce: string): Response {
 async function route(request: Request, env: Env, context: ExecutionContext): Promise<Response> {
   const url = new URL(request.url);
   if (request.method === "OPTIONS") return optionsResponse(request, env);
-  if (url.pathname === "/") return Response.redirect(`${url.origin}/dashboard`, 302);
+  if (url.pathname === "/") {
+    if (request.method !== "GET") return methodNotAllowed("GET");
+    const nonce = crypto.randomUUID().replaceAll("-", "");
+    return htmlResponse(landingHtml(nonce), nonce);
+  }
 
   if (url.pathname === "/dashboard") {
     if (request.method !== "GET") return methodNotAllowed("GET");

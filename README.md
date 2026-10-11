@@ -9,6 +9,7 @@ A voice-based patient registration demo built for the CareCloud AI Engineer asse
 Live assessment endpoints:
 
 - **Repository:** `https://github.com/NihalAli19/carecloud-voice-patient-registry`
+- **Assessment overview:** `https://carecloud-voice-patient-registry.nihalaliytt.workers.dev/`
 - **U.S. phone number:** `+1 864-625-5246`
 - **API base URL:** `https://carecloud-voice-patient-registry.nihalaliytt.workers.dev`
 - **Dashboard:** `https://carecloud-voice-patient-registry.nihalaliytt.workers.dev/dashboard`
@@ -59,7 +60,8 @@ Current official limits and vendor behavior should be rechecked before submissio
 - Authenticated mutation/read API and separately authenticated Vapi webhook.
 - End-of-call transcript/summary storage linked to the patient when registration succeeds.
 - English/Spanish language switching.
-- Responsive API-key-protected dashboard.
+- Public reviewer overview with a call-first test journey, live health status, synthetic test profile, and direct dashboard handoff.
+- Responsive API-key-protected dashboard with a clear return path to the overview.
 - OpenAPI 3.1 document at `/openapi.json` and human summary at `/docs`.
 - Structured stdout logs, health check, request IDs, nonce-based CSP/security headers, bounded request bodies, and no hardcoded secrets.
 - Unit and security regression tests, tracked-file secret scanning, dependency auditing in CI, local migrations, and deployment dry-run validation.
@@ -115,7 +117,7 @@ On PowerShell, replace the copy command with:
 Copy-Item .env.example .dev.vars
 ```
 
-Generate strong, different `API_KEY` and `VAPI_WEBHOOK_SECRET` values in `.dev.vars`. The local app is then available at `http://localhost:8787`; the dashboard is `/dashboard`.
+Generate strong, different `API_KEY` and `VAPI_WEBHOOK_SECRET` values in `.dev.vars`. The local app is then available at `http://localhost:8787`; start at `/` for the reviewer journey or open `/dashboard` directly for registry access.
 
 Validation and build checks:
 
