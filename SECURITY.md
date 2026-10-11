@@ -8,7 +8,7 @@ Only the current `main` branch is maintained. Report security concerns privately
 
 ## Credential handling
 
-- Keep Worker secrets in Cloudflare Secrets.
+- Keep Worker secrets in Cloudflare Secrets, including `API_KEY`, `VAPI_WEBHOOK_SECRET`, and `AUTH_PEPPER`.
 - Keep Vapi credentials in a private local environment or secret manager.
 - Never commit `.dev.vars`, `.env.production.local`, API keys, webhook secrets, provider keys, private keys, or service-account files.
 - Dashboard reviewers should create their own account. Share the application `API_KEY` only when direct REST write testing is required. Never share `VAPI_API_KEY` or `VAPI_WEBHOOK_SECRET`.
@@ -18,7 +18,7 @@ The CI security check rejects common credential files and secret formats, but au
 
 ## Account handling
 
-- Passwords are stored only as salted PBKDF2-SHA-256 hashes.
+- Passwords are stored as per-user salted HMAC-SHA-256 values keyed by a separate server-only `AUTH_PEPPER`. Plaintext passwords and the pepper are never stored in D1.
 - Browser sessions expire after eight hours; only token hashes are stored in D1.
 - Session cookies are HttpOnly and SameSite=Strict, and add Secure on HTTPS.
 - Account sessions are read-only for registry data. Patient writes and deletes still require the machine API key.

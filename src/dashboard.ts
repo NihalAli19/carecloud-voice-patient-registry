@@ -467,7 +467,10 @@ $('#login').addEventListener('submit', async (event) => {
       body: JSON.stringify(payload)
     });
     const body = await response.json();
-    if (!response.ok) throw new Error(body.error?.message || 'Unable to continue.');
+    if (!response.ok) {
+      const reference = body.error?.request_id ? ' Reference: ' + body.error.request_id + '.' : '';
+      throw new Error((body.error?.message || 'Unable to continue.') + reference);
+    }
     state.user = body.data;
     $('#userLabel').textContent = state.user.display_name;
     $('#password').value = '';

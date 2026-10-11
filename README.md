@@ -61,7 +61,7 @@ Current official limits and vendor behavior should be rechecked before submissio
 - End-of-call transcript/summary storage linked to the patient when registration succeeds.
 - English/Spanish language switching.
 - Public reviewer overview with a call-first test journey, synthetic test profile, and simple sign-in/account-creation entry points.
-- Responsive account-protected dashboard with D1-backed users, PBKDF2 password hashes, HttpOnly sessions, lockout protection, and a clear return path.
+- Responsive account-protected dashboard with D1-backed users, salted, server-peppered password hashes, HttpOnly sessions, lockout protection, and a clear return path.
 - OpenAPI 3.1 document at `/openapi.json` and human summary at `/docs`.
 - Structured stdout logs, health check, request IDs, nonce-based CSP/security headers, bounded request bodies, and no hardcoded secrets.
 - Unit and security regression tests, tracked-file secret scanning, dependency auditing in CI, local migrations, and deployment dry-run validation.
@@ -117,7 +117,7 @@ On PowerShell, replace the copy command with:
 Copy-Item .env.example .dev.vars
 ```
 
-Generate strong, different `API_KEY` and `VAPI_WEBHOOK_SECRET` values in `.dev.vars`. The local app is then available at `http://localhost:8787`; start at `/` for the reviewer journey or open `/dashboard` directly for registry access.
+Generate strong, different `API_KEY`, `AUTH_PEPPER`, and `VAPI_WEBHOOK_SECRET` values in `.dev.vars`. `AUTH_PEPPER` must be at least 32 characters and must not reuse another credential. The local app is then available at `http://localhost:8787`; start at `/` for the reviewer journey or open `/dashboard` directly for registry access.
 
 Validation and build checks:
 
@@ -148,6 +148,7 @@ Release verification helpers read credentials only from environment variables:
 
    ```bash
    npx wrangler secret put API_KEY
+   npx wrangler secret put AUTH_PEPPER
    npx wrangler secret put VAPI_WEBHOOK_SECRET
    ```
 
@@ -188,7 +189,7 @@ The script defaults to Vapi-managed model/speech access. Add your OpenAI provide
 ## Security and resilience
 
 - Patient endpoints are not anonymous. Dashboard reads require a valid D1-backed account session; machine reads and every mutation require the bearer API key.
-- Passwords use salted PBKDF2-SHA-256 hashes, never plaintext. Session tokens are stored only as SHA-256 hashes and delivered in HttpOnly, SameSite=Strict cookies with Secure enabled over HTTPS.
+- Passwords use per-user salts and HMAC-SHA-256 keyed by a separate server-only pepper; neither plaintext passwords nor the pepper are stored in D1. Session tokens are stored only as SHA-256 hashes and delivered in HttpOnly, SameSite=Strict cookies with Secure enabled over HTTPS.
 - Five failed password attempts lock the account for 15 minutes. Browser authentication POSTs reject cross-site origins.
 - Vapi uses a different bearer secret, so reviewer API access cannot forge voice webhooks.
 - Every caller-influenced field is validated again at the server boundary; unknown fields, control characters, invalid NANP numbers, and oversized bodies are rejected.
@@ -206,7 +207,7 @@ Brutally honest version:
 
 - **This does not provide 99.9999999999% uptime.** No free stack does. Workers Free and D1 have enforced quotas and no enterprise SLA; Vapi, the carrier, speech services, and the model are additional dependencies.
 - **This is not HIPAA compliant.** It lacks a BAA configuration, formal access control, audit governance, retention policy, key rotation process, consent workflow, and compliance validation. Never enter real PHI.
-- Dashboard accounts are named, but sign-up is intentionally open and there is no email verification, password reset, invitation approval, MFA, RBAC, or tenant isolation. Any registered account can read all synthetic records. That is acceptable only for this public assessment—not a clinic.
+- Dashboard accounts are named, but sign-up is intentionally open and there is no email verification, password reset, invitation approval, MFA, RBAC, or tenant isolation. Any registered account can read all synthetic records. The free Worker CPU budget also prevents a modern slow KDF, so this deployment uses a server-side pepper; production healthcare should use managed identity or dedicated authentication compute. This is acceptable only for the synthetic assessment—not a clinic.
 - D1 is single-writer SQLite infrastructure. It is more than enough for this assessment, but a high-volume production intake platform should load-test and may need Postgres.
 - Vapi’s free number is inbound-only, cannot be ported out, and still consumes paid call/AI credits.
 - Transcript logs and the assessment-required final-payload stdout log contain synthetic demographics. Production logging would require redaction and a defined retention policy.

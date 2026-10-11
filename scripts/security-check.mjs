@@ -28,7 +28,7 @@ for (const file of files) {
   if (bytes.includes(0)) failures.push(`${file}: contains NUL bytes`);
   const text = bytes.toString("utf8");
   const patterns = basename?.startsWith(".env")
-    ? [...secretPatterns, /\b(?:VAPI_API_KEY|VAPI_WEBHOOK_SECRET|API_KEY)\s*=\s*(?!replace-|example-|test-|your-|<)[^\s#]{12,}/i]
+    ? [...secretPatterns, /\b(?:VAPI_API_KEY|VAPI_WEBHOOK_SECRET|AUTH_PEPPER|API_KEY)\s*=\s*(?!replace-|example-|test-|your-|<)[^\s#]{12,}/i]
     : secretPatterns;
   for (const pattern of patterns) {
     if (pattern.test(text)) failures.push(`${file}: matches secret pattern ${pattern}`);

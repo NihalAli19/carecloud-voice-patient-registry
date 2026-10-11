@@ -1,6 +1,7 @@
 export interface Env {
   DB: D1Database;
   API_KEY?: string;
+  AUTH_PEPPER?: string;
   VAPI_WEBHOOK_SECRET?: string;
   ALLOWED_ORIGIN?: string;
   ENVIRONMENT?: string;

@@ -24,7 +24,7 @@ Expected result:
 
 ## 2. Local application test
 
-Ensure `.dev.vars` contains unique development values for `API_KEY` and `VAPI_WEBHOOK_SECRET`, then run:
+Ensure `.dev.vars` contains unique development values for `API_KEY`, `AUTH_PEPPER` (at least 32 characters), and `VAPI_WEBHOOK_SECRET`, then run:
 
 ```powershell
 npm run dev

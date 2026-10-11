@@ -20,12 +20,13 @@ test("account passwords require a long printable passphrase", () => {
 });
 
 test("password hashes use unique salts and verify without storing plaintext", async () => {
-  const first = await hashAccountPassword("correct horse battery staple");
-  const second = await hashAccountPassword("correct horse battery staple");
+  const pepper = "test-only-pepper-that-is-longer-than-32-characters";
+  const first = await hashAccountPassword("correct horse battery staple", pepper);
+  const second = await hashAccountPassword("correct horse battery staple", pepper);
 
   assert.notEqual(first, second);
   assert.doesNotMatch(first, /correct horse/);
-  assert.equal(await verifyAccountPassword("correct horse battery staple", first), true);
-  assert.equal(await verifyAccountPassword("wrong password value", first), false);
-  assert.equal(await verifyAccountPassword("correct horse battery staple", "invalid"), false);
+  assert.equal(await verifyAccountPassword("correct horse battery staple", first, pepper), true);
+  assert.equal(await verifyAccountPassword("wrong password value", first, pepper), false);
+  assert.equal(await verifyAccountPassword("correct horse battery staple", "invalid", pepper), false);
 });

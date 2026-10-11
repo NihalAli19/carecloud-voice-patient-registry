@@ -3,7 +3,7 @@ import type { Env } from "./types";
 
 const SESSION_COOKIE = "cc_session";
 const SESSION_SECONDS = 8 * 60 * 60;
-const PASSWORD_ITERATIONS = 210_000;
+const PASSWORD_ALGORITHM = "hmac_sha256_v1";
 const MAX_AUTH_BODY = 8 * 1024;
 const LOCKOUT_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
@@ -103,24 +103,23 @@ function parseAuthInput(value: unknown, signup: boolean): { input?: AuthInput; r
   return { input: { email, password, ...(displayName ? { display_name: displayName } : {}) } };
 }
 
-export async function hashAccountPassword(password: string, salt: Uint8Array<ArrayBufferLike> = crypto.getRandomValues(new Uint8Array(16))): Promise<string> {
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", hash: "SHA-256", salt: new Uint8Array(salt), iterations: PASSWORD_ITERATIONS },
-    key,
-    256,
-  );
-  return `pbkdf2_sha256$${PASSWORD_ITERATIONS}$${encodeBase64Url(salt)}$${encodeBase64Url(new Uint8Array(bits))}`;
+export async function hashAccountPassword(password: string, pepper: string, salt: Uint8Array<ArrayBufferLike> = crypto.getRandomValues(new Uint8Array(16))): Promise<string> {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pepper), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const passwordBytes = new TextEncoder().encode(password);
+  const input = new Uint8Array(salt.length + passwordBytes.length);
+  input.set(salt);
+  input.set(passwordBytes, salt.length);
+  const signature = await crypto.subtle.sign("HMAC", key, input);
+  return `${PASSWORD_ALGORITHM}$${encodeBase64Url(salt)}$${encodeBase64Url(new Uint8Array(signature))}`;
 }
 
-export async function verifyAccountPassword(password: string, encoded: string): Promise<boolean> {
-  const [algorithm, iterationsRaw, saltRaw, expectedRaw] = encoded.split("$");
-  const iterations = Number(iterationsRaw);
+export async function verifyAccountPassword(password: string, encoded: string, pepper: string): Promise<boolean> {
+  const [algorithm, saltRaw, expectedRaw] = encoded.split("$");
   const salt = saltRaw ? decodeBase64Url(saltRaw) : undefined;
   const expected = expectedRaw ? decodeBase64Url(expectedRaw) : undefined;
-  if (algorithm !== "pbkdf2_sha256" || iterations !== PASSWORD_ITERATIONS || !salt || salt.length !== 16 || !expected || expected.length !== 32) return false;
-  const candidate = await hashAccountPassword(password, salt);
-  const actualRaw = candidate.split("$")[3];
+  if (algorithm !== PASSWORD_ALGORITHM || !salt || salt.length !== 16 || !expected || expected.length !== 32) return false;
+  const candidate = await hashAccountPassword(password, pepper, salt);
+  const actualRaw = candidate.split("$")[2];
   const actual = actualRaw ? decodeBase64Url(actualRaw) : undefined;
   return Boolean(actual && constantTimeEqual(actual, expected));
 }
@@ -140,6 +139,10 @@ function cookieToken(request: Request): string | undefined {
 function sessionCookie(request: Request, token: string, maxAge: number): string {
   const secure = new URL(request.url).protocol === "https:" ? "; Secure" : "";
   return `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secure}`;
+}
+
+function accountPepper(env: Env): string | undefined {
+  return env.AUTH_PEPPER && env.AUTH_PEPPER.length >= 32 ? env.AUTH_PEPPER : undefined;
 }
 
 function sameOriginError(request: Request): Response | null {
@@ -186,12 +189,14 @@ export async function requireApiKeyOrSession(request: Request, env: Env): Promis
 export async function handleSignUp(request: Request, env: Env): Promise<Response> {
   const originError = sameOriginError(request);
   if (originError) return originError;
+  const pepper = accountPepper(env);
+  if (!pepper) return failure(503, "SERVER_MISCONFIGURED", "Account authentication is temporarily unavailable.");
   const body = await readJson(request, MAX_AUTH_BODY);
   if (body.response) return body.response;
   const parsed = parseAuthInput(body.value, true);
   if (!parsed.input) return parsed.response!;
 
-  const passwordHash = await hashAccountPassword(parsed.input.password);
+  const passwordHash = await hashAccountPassword(parsed.input.password, pepper);
   const now = new Date().toISOString();
   const user: AuthUser = {
     user_id: crypto.randomUUID(),
@@ -215,6 +220,8 @@ export async function handleSignUp(request: Request, env: Env): Promise<Response
 export async function handleSignIn(request: Request, env: Env): Promise<Response> {
   const originError = sameOriginError(request);
   if (originError) return originError;
+  const pepper = accountPepper(env);
+  if (!pepper) return failure(503, "SERVER_MISCONFIGURED", "Account authentication is temporarily unavailable.");
   const body = await readJson(request, MAX_AUTH_BODY);
   if (body.response) return body.response;
   const parsed = parseAuthInput(body.value, false);
@@ -226,7 +233,7 @@ export async function handleSignIn(request: Request, env: Env): Promise<Response
   `).bind(parsed.input.email).first<UserAuthRow>();
 
   if (!user) {
-    await hashAccountPassword(parsed.input.password, new Uint8Array(16));
+    await hashAccountPassword(parsed.input.password, pepper, new Uint8Array(16));
     return failure(401, "INVALID_CREDENTIALS", "The email or password is incorrect.");
   }
 
@@ -235,7 +242,7 @@ export async function handleSignIn(request: Request, env: Env): Promise<Response
     return failure(429, "ACCOUNT_LOCKED", "Too many failed attempts. Try again in 15 minutes.");
   }
 
-  const valid = await verifyAccountPassword(parsed.input.password, user.password_hash);
+  const valid = await verifyAccountPassword(parsed.input.password, user.password_hash, pepper);
   if (!valid) {
     const priorAttempts = user.locked_until ? 0 : user.failed_attempts;
     const nextAttempts = priorAttempts + 1;
