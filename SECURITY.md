@@ -11,10 +11,18 @@ Only the current `main` branch is maintained. Report security concerns privately
 - Keep Worker secrets in Cloudflare Secrets.
 - Keep Vapi credentials in a private local environment or secret manager.
 - Never commit `.dev.vars`, `.env.production.local`, API keys, webhook secrets, provider keys, private keys, or service-account files.
-- Give reviewers only the application `API_KEY`. Never share `VAPI_API_KEY` or `VAPI_WEBHOOK_SECRET`.
+- Dashboard reviewers should create their own account. Share the application `API_KEY` only when direct REST write testing is required. Never share `VAPI_API_KEY` or `VAPI_WEBHOOK_SECRET`.
 - Rotate a credential immediately if it appears in source control, logs, screenshots, chat, or email.
 
 The CI security check rejects common credential files and secret formats, but automated scanning is not a substitute for reviewing staged changes.
+
+## Account handling
+
+- Passwords are stored only as salted PBKDF2-SHA-256 hashes.
+- Browser sessions expire after eight hours; only token hashes are stored in D1.
+- Session cookies are HttpOnly and SameSite=Strict, and add Secure on HTTPS.
+- Account sessions are read-only for registry data. Patient writes and deletes still require the machine API key.
+- Open registration is for this synthetic assessment only. There is no email verification, recovery, MFA, role model, or tenant isolation.
 
 ## Data handling
 

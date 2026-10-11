@@ -13,6 +13,7 @@
     "test": "tsx --test tests/*.test.ts",
     "security:check": "node scripts/security-check.mjs",
     "smoke:api": "node scripts/smoke-api.mjs",
+    "smoke:auth": "node scripts/smoke-auth.mjs",
     "verify:public": "node scripts/verify-public.mjs",
     "verify:vapi": "node scripts/verify-vapi.mjs",
     "check": "npm run typecheck && npm test && npm run security:check"

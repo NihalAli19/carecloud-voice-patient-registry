@@ -40,11 +40,13 @@ Open these URLs:
 
 Acceptance checks:
 
-- The overview explains the call-to-dashboard journey, displays the synthetic-data warning, and reports live service health.
+- The overview explains the call-to-dashboard journey, displays the synthetic-data warning, and provides clear Sign in and Create account paths without internal status or API-documentation UI.
 - Health reports `ok` and `database: connected`.
 - The dashboard reports the real service status rather than a static success label.
-- An invalid API key is rejected.
-- Sign out removes the key from the browser session and returns to the assessment overview.
+- A reviewer can create an account, sign out, and sign back in; invalid credentials are rejected.
+- Account sessions can read registry data but cannot create, update, or delete patients.
+- An invalid machine API key is rejected.
+- Sign out deletes the server session, clears the HttpOnly cookie, and returns to the overview.
 - Patient filters and row details work at desktop and mobile widths.
 - Recent calls are displayed without transcript content.
 
@@ -59,7 +61,9 @@ $env:VAPI_WEBHOOK_SECRET = "your-local-webhook-secret"
 npm run smoke:api
 ```
 
-The smoke suite verifies authentication, malformed paths, payload limits, creation, idempotent replay, idempotency conflicts, duplicate prevention, updates, soft deletion, phone reuse, Vapi authentication, DOB-protected lookup/update, and call-report persistence.
+The API smoke suite verifies machine authentication, malformed paths, payload limits, creation, idempotent replay, idempotency conflicts, duplicate prevention, updates, soft deletion, phone reuse, Vapi authentication, DOB-protected lookup/update, and call-report persistence.
+
+For the browser-account lifecycle, point `PUBLIC_BASE_URL` at the local Worker and run `npm run smoke:auth`. It verifies signup, duplicate prevention, cookie sessions, read-only access, write denial, signout, and signin. It leaves one synthetic account in local D1; do not run it against production unless that test account is intentionally retained.
 
 The suite creates only synthetic records and soft-deletes its patients. Use a disposable local database for repeated development runs.
 
@@ -70,7 +74,7 @@ $env:PUBLIC_BASE_URL = "https://carecloud-voice-patient-registry.nihalaliytt.wor
 npm run verify:public
 ```
 
-Expected result: overview journey, health, database connectivity, dashboard return path, documentation, OpenAPI, HSTS, CSP nonces, anti-framing, and no-store checks all pass.
+Expected result: simplified overview journey, anonymous account gate, health, database connectivity, dashboard account forms, hidden legacy API-key UI, documentation endpoints, OpenAPI, HSTS, CSP nonces, anti-framing, and no-store checks all pass.
 
 ## 5. Real phone test
 
@@ -137,6 +141,6 @@ Expected behavior: the agent recovers naturally, asks only for missing/invalid i
 - The Vapi phone is active and assigned to the expected assistant.
 - Vapi has enough credits for reviewer calls.
 - Production D1 has no pending migrations.
-- The reviewer receives the application `API_KEY` privately.
+- The reviewer can self-register for dashboard access; provide the application `API_KEY` privately only if direct REST write testing is requested.
 - Vapi and webhook credentials are never shared.
 - The submission clearly says “synthetic data only” and does not claim HIPAA compliance or an unsupported uptime SLA.

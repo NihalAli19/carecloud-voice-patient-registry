@@ -13,7 +13,7 @@ Live assessment endpoints:
 - **U.S. phone number:** `+1 864-625-5246`
 - **API base URL:** `https://carecloud-voice-patient-registry.nihalaliytt.workers.dev`
 - **Dashboard:** `https://carecloud-voice-patient-registry.nihalaliytt.workers.dev/dashboard`
-- **API credential:** provide the reviewer with the production `API_KEY` through a private channel
+- **Machine API credential:** provide `API_KEY` privately only when the reviewer needs direct REST write testing; dashboard reviewers can create an account
 
 ## Architecture
 
@@ -23,7 +23,7 @@ flowchart LR
   Vapi -->|GPT-5.4 Mini| LLM[Conversation + tool choice]
   Vapi -->|Authenticated tool calls| Worker[Cloudflare Worker]
   Worker <-->|Prepared SQL| D1[(Cloudflare D1)]
-  Dashboard[Secured dashboard] -->|Bearer-authenticated REST| Worker
+  Dashboard[Secured dashboard] -->|HttpOnly session, read-only REST| Worker
   Reviewer[API reviewer] -->|Bearer-authenticated REST| Worker
 ```
 
@@ -60,15 +60,15 @@ Current official limits and vendor behavior should be rechecked before submissio
 - Authenticated mutation/read API and separately authenticated Vapi webhook.
 - End-of-call transcript/summary storage linked to the patient when registration succeeds.
 - English/Spanish language switching.
-- Public reviewer overview with a call-first test journey, live health status, synthetic test profile, and direct dashboard handoff.
-- Responsive API-key-protected dashboard with a clear return path to the overview.
+- Public reviewer overview with a call-first test journey, synthetic test profile, and simple sign-in/account-creation entry points.
+- Responsive account-protected dashboard with D1-backed users, PBKDF2 password hashes, HttpOnly sessions, lockout protection, and a clear return path.
 - OpenAPI 3.1 document at `/openapi.json` and human summary at `/docs`.
 - Structured stdout logs, health check, request IDs, nonce-based CSP/security headers, bounded request bodies, and no hardcoded secrets.
 - Unit and security regression tests, tracked-file secret scanning, dependency auditing in CI, local migrations, and deployment dry-run validation.
 
 ## API
 
-All patient and call routes require `Authorization: Bearer <API_KEY>`.
+Machine clients use `Authorization: Bearer <API_KEY>`. Same-origin dashboard sessions may read patient and call routes, but create, update, and delete operations always require the machine API key.
 
 | Method | Route | Behavior |
 | --- | --- | --- |
@@ -129,6 +129,7 @@ npx wrangler deploy --dry-run
 Release verification helpers read credentials only from environment variables:
 
 - `npm run smoke:api` requires `PUBLIC_BASE_URL`, `API_KEY`, and `VAPI_WEBHOOK_SECRET`; it uses synthetic data and soft-deletes created patients.
+- `npm run smoke:auth` requires `PUBLIC_BASE_URL` and verifies signup, duplicate prevention, session reads, write denial, signout, and signin. Run it against local D1 because it leaves a synthetic test account.
 - `npm run verify:public` requires `PUBLIC_BASE_URL` and checks health, documentation, and browser security headers.
 - `npm run verify:vapi` requires the Vapi IDs and private credentials and reads back the live assistant/phone configuration without printing secrets.
 
@@ -186,7 +187,9 @@ The script defaults to Vapi-managed model/speech access. Add your OpenAI provide
 
 ## Security and resilience
 
-- Patient endpoints are not anonymous. A bearer key is required even for reads.
+- Patient endpoints are not anonymous. Dashboard reads require a valid D1-backed account session; machine reads and every mutation require the bearer API key.
+- Passwords use salted PBKDF2-SHA-256 hashes, never plaintext. Session tokens are stored only as SHA-256 hashes and delivered in HttpOnly, SameSite=Strict cookies with Secure enabled over HTTPS.
+- Five failed password attempts lock the account for 15 minutes. Browser authentication POSTs reject cross-site origins.
 - Vapi uses a different bearer secret, so reviewer API access cannot forge voice webhooks.
 - Every caller-influenced field is validated again at the server boundary; unknown fields, control characters, invalid NANP numbers, and oversized bodies are rejected.
 - SQL values use prepared statements; dynamic column names come only from a fixed allowlist.
@@ -203,7 +206,7 @@ Brutally honest version:
 
 - **This does not provide 99.9999999999% uptime.** No free stack does. Workers Free and D1 have enforced quotas and no enterprise SLA; Vapi, the carrier, speech services, and the model are additional dependencies.
 - **This is not HIPAA compliant.** It lacks a BAA configuration, formal access control, audit governance, retention policy, key rotation process, consent workflow, and compliance validation. Never enter real PHI.
-- The dashboard uses a shared API key rather than named users and roles. That is acceptable for a reviewer demo, not a clinic.
+- Dashboard accounts are named, but sign-up is intentionally open and there is no email verification, password reset, invitation approval, MFA, RBAC, or tenant isolation. Any registered account can read all synthetic records. That is acceptable only for this public assessment—not a clinic.
 - D1 is single-writer SQLite infrastructure. It is more than enough for this assessment, but a high-volume production intake platform should load-test and may need Postgres.
 - Vapi’s free number is inbound-only, cannot be ported out, and still consumes paid call/AI credits.
 - Transcript logs and the assessment-required final-payload stdout log contain synthetic demographics. Production logging would require redaction and a defined retention policy.

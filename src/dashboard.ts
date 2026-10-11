@@ -71,8 +71,8 @@ export function dashboardHtml(nonce: string): string {
     .panel { margin-bottom: 22px; overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
     .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 19px; border-bottom: 1px solid var(--border); }
     .panel-heading p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
-    .docs-link { color: var(--teal); font-size: 12px; font-weight: 700; text-decoration: none; }
-    .docs-link:hover { text-decoration: underline; }
+
+
     .filters { display: flex; gap: 10px; flex-wrap: wrap; padding: 16px 18px; background: var(--surface-subtle); border-bottom: 1px solid var(--border); }
     .field { position: relative; flex: 1; min-width: 180px; }
     .field label { position: absolute; left: 11px; top: 5px; color: var(--muted); font-size: 9px; font-weight: 750; letter-spacing: 0.07em; text-transform: uppercase; }
@@ -93,14 +93,21 @@ export function dashboardHtml(nonce: string): string {
     .panel-footer { display: flex; justify-content: space-between; gap: 18px; padding: 12px 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
     .notice { padding: 13px 16px; border: 1px solid #f0d6a8; border-left: 4px solid var(--warning-border); border-radius: 8px; background: var(--warning-bg); color: #62491f; font-size: 12px; }
     .overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 20px; background: rgba(17, 37, 47, 0.72); backdrop-filter: blur(5px); }
-    .overlay[hidden], .drawer[hidden] { display: none; }
-    .login { width: min(420px, 100%); padding: 28px; background: #fff; border-radius: 14px; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3); }
+    .overlay[hidden], .drawer[hidden], .login[hidden], .auth-loading[hidden], .signup-only[hidden] { display: none; }
+    .login { width: min(440px, 100%); padding: 30px; background: #fff; border-radius: 14px; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3); }
     .login h2 { margin: 5px 0 8px; font-size: 26px; }
-    .login p { margin: 0 0 18px; color: var(--muted); }
-    .login input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
-    .login button { width: 100%; margin-top: 9px; }
-    .back-link { display: block; margin-top: 14px; color: var(--teal); font-size: 12px; font-weight: 700; text-align: center; text-decoration: none; }
+    .login > p { margin: 0 0 20px; color: var(--muted); }
+    .auth-field { margin-top: 13px; }
+    .auth-field label { display: block; margin-bottom: 5px; color: #45545d; font-size: 12px; font-weight: 700; }
+    .auth-field input { width: 100%; padding: 11px 12px; border: 1px solid var(--border); border-radius: 8px; }
+    .login > .primary-button { width: 100%; margin-top: 5px; }
+    .auth-switch { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 16px; color: var(--muted); font-size: 12px; }
+    .link-button { width: auto; margin: 0; padding: 0; border: 0; background: transparent; color: var(--teal); font: inherit; font-weight: 750; cursor: pointer; }
+    .link-button:hover { text-decoration: underline; }
+    .back-link { display: block; margin-top: 15px; color: var(--teal); font-size: 12px; font-weight: 700; text-align: center; text-decoration: none; }
     .back-link:hover { text-decoration: underline; }
+    .auth-loading { width: min(360px, 100%); padding: 27px; border-radius: 14px; background: #fff; color: var(--muted); text-align: center; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3); }
+    .user-label { color: #bcd0d8; font-size: 12px; }
     .error { min-height: 20px; padding-top: 4px; color: var(--danger); font-size: 12px; }
     .drawer { position: fixed; inset: 0; z-index: 9; display: flex; justify-content: flex-end; background: rgba(17, 37, 47, 0.48); }
     .drawer-card { width: min(560px, 100%); height: 100%; padding: 28px; overflow-y: auto; background: #fff; box-shadow: -18px 0 50px rgba(0, 0, 0, 0.15); }
@@ -133,6 +140,7 @@ export function dashboardHtml(nonce: string): string {
       <div class="service-status" id="serviceStatus" role="status" aria-live="polite">
         <span class="status-dot" id="statusDot"></span><span id="statusText">Checking service</span>
       </div>
+      <span class="user-label" id="userLabel" hidden></span>
       <a class="text-button" href="/">Overview</a>
       <button class="text-button" id="signOut" type="button" hidden>Sign out</button>
     </div>
@@ -157,7 +165,7 @@ export function dashboardHtml(nonce: string): string {
     <section class="panel" aria-labelledby="patientsHeading">
       <header class="panel-heading">
         <div><h2 id="patientsHeading">Patient registry</h2><p>Active records only. Select a row to review full details.</p></div>
-        <a class="docs-link" href="/docs">API documentation</a>
+
       </header>
       <form class="filters" id="filters">
         <div class="field"><label for="lastName">Last name</label><input id="lastName" name="last_name" autocomplete="off"></div>
@@ -172,7 +180,7 @@ export function dashboardHtml(nonce: string): string {
           <tbody id="patientRows"><tr><td colspan="6" class="empty">Authenticate to load records.</td></tr></tbody>
         </table>
       </div>
-      <footer class="panel-footer"><span id="resultCount">—</span><span>Soft-delete enabled · API-key protected</span></footer>
+      <footer class="panel-footer"><span id="resultCount">—</span><span>Soft-delete enabled · Account session protected</span></footer>
     </section>
 
     <section class="panel" aria-labelledby="callsHeading">
@@ -191,15 +199,31 @@ export function dashboardHtml(nonce: string): string {
 </div>
 
 <div class="overlay" id="auth">
-  <form class="login" id="login">
-    <div class="eyebrow">Restricted access</div>
-    <h2>Sign in to the registry</h2>
-    <p>Enter the assessment API key. It is retained only in this browser tab.</p>
-    <label class="sr-only" for="token">API key</label>
-    <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="API key" required>
+  <div class="auth-loading" id="authLoading" role="status">Checking your session…</div>
+  <form class="login" id="login" hidden>
+    <div class="eyebrow">Secure registry access</div>
+    <h2 id="authTitle">Sign in</h2>
+    <p id="authDescription">Use your account to review synthetic patient registrations.</p>
+    <div class="auth-field signup-only" id="nameField" hidden>
+      <label for="displayName">Display name</label>
+      <input id="displayName" name="display_name" type="text" autocomplete="name" maxlength="80">
+    </div>
+    <div class="auth-field">
+      <label for="email">Email address</label>
+      <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required>
+    </div>
+    <div class="auth-field">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" minlength="12" maxlength="128" required>
+    </div>
+    <div class="auth-field signup-only" id="confirmField" hidden>
+      <label for="confirmPassword">Confirm password</label>
+      <input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128">
+    </div>
     <div class="error" id="authError" role="alert"></div>
-    <button class="primary-button" type="submit">Continue</button>
-    <a class="back-link" href="/">Back to assessment overview</a>
+    <button class="primary-button" id="authSubmit" type="submit">Sign in</button>
+    <div class="auth-switch"><span id="authSwitchText">New here?</span><button class="link-button" id="authSwitch" type="button">Create an account</button></div>
+    <a class="back-link" href="/">Back to overview</a>
   </form>
 </div>
 
@@ -215,7 +239,8 @@ export function dashboardHtml(nonce: string): string {
 
 <script nonce="${nonce}">
 const state = {
-  token: sessionStorage.getItem('carecloud_api_key') || '',
+  user: null,
+  authMode: new URLSearchParams(window.location.search).get('mode') === 'signup' ? 'signup' : 'signin',
   patients: [],
   calls: [],
   total: 0
@@ -242,14 +267,38 @@ async function checkHealth() {
   }
 }
 
+function setAuthMode(mode) {
+  state.authMode = mode;
+  const signup = mode === 'signup';
+  $('#authTitle').textContent = signup ? 'Create your account' : 'Sign in';
+  $('#authDescription').textContent = signup
+    ? 'Create an account to review synthetic registration records.'
+    : 'Use your account to review synthetic patient registrations.';
+  $('#authSubmit').textContent = signup ? 'Create account' : 'Sign in';
+  $('#authSwitchText').textContent = signup ? 'Already have an account?' : 'New here?';
+  $('#authSwitch').textContent = signup ? 'Sign in' : 'Create an account';
+  document.querySelectorAll('.signup-only').forEach((field) => { field.hidden = !signup; });
+  $('#displayName').required = signup;
+  $('#confirmPassword').required = signup;
+  $('#password').autocomplete = signup ? 'new-password' : 'current-password';
+  $('#authError').textContent = '';
+}
+
+function showAuth(message = '') {
+  $('#auth').hidden = false;
+  $('#authLoading').hidden = true;
+  $('#login').hidden = false;
+  $('#signOut').hidden = true;
+  $('#userLabel').hidden = true;
+  setAuthMode(state.authMode);
+  $('#authError').textContent = message;
+  $('#email').focus();
+}
+
 async function api(path) {
-  const response = await fetch(path, {
-    cache: 'no-store',
-    headers: { Authorization: 'Bearer ' + state.token }
-  });
+  const response = await fetch(path, { cache: 'no-store' });
   if (response.status === 401) {
-    state.token = '';
-    sessionStorage.removeItem('carecloud_api_key');
+    state.user = null;
     throw new Error('unauthorized');
   }
   const body = await response.json();
@@ -338,15 +387,13 @@ async function loadData() {
     state.calls = calls.items;
     $('#auth').hidden = true;
     $('#signOut').hidden = false;
+    $('#userLabel').hidden = false;
     $('#authError').textContent = '';
     renderPatients();
     renderCalls();
   } catch (error) {
     if (error.message === 'unauthorized') {
-      $('#auth').hidden = false;
-      $('#signOut').hidden = true;
-      $('#authError').textContent = 'The API key was rejected.';
-      $('#token').focus();
+      showAuth('Your session expired. Sign in again.');
       return;
     }
     $('#patientRows').innerHTML = '<tr><td colspan="6" class="empty">Unable to load records: ' + escapeHtml(error.message) + '</td></tr>';
@@ -381,27 +428,67 @@ function closeDrawer() {
   $('#drawer').hidden = true;
 }
 
-function signOut() {
-  state.token = '';
-  sessionStorage.removeItem('carecloud_api_key');
-  window.location.assign('/');
+async function signOut() {
+  try { await fetch('/auth/signout', { method: 'POST' }); } finally { window.location.assign('/'); }
 }
 
-$('#login').addEventListener('submit', (event) => {
+async function initializeSession() {
+  try {
+    const response = await fetch('/auth/me', { cache: 'no-store' });
+    if (!response.ok) throw new Error('anonymous');
+    const body = await response.json();
+    state.user = body.data;
+    $('#userLabel').textContent = state.user.display_name;
+    $('#userLabel').hidden = false;
+    $('#auth').hidden = true;
+    $('#signOut').hidden = false;
+    await loadData();
+  } catch {
+    showAuth();
+  }
+}
+
+$('#login').addEventListener('submit', async (event) => {
   event.preventDefault();
-  state.token = $('#token').value.trim();
-  sessionStorage.setItem('carecloud_api_key', state.token);
-  loadData();
+  const signup = state.authMode === 'signup';
+  if (signup && $('#password').value !== $('#confirmPassword').value) {
+    $('#authError').textContent = 'Passwords do not match.';
+    return;
+  }
+  const submit = $('#authSubmit');
+  submit.disabled = true;
+  $('#authError').textContent = '';
+  try {
+    const payload = { email: $('#email').value, password: $('#password').value };
+    if (signup) payload.display_name = $('#displayName').value;
+    const response = await fetch(signup ? '/auth/signup' : '/auth/signin', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error?.message || 'Unable to continue.');
+    state.user = body.data;
+    $('#userLabel').textContent = state.user.display_name;
+    $('#password').value = '';
+    $('#confirmPassword').value = '';
+    await loadData();
+  } catch (error) {
+    $('#authError').textContent = error.message;
+  } finally {
+    submit.disabled = false;
+  }
 });
+$('#authSwitch').addEventListener('click', () => setAuthMode(state.authMode === 'signin' ? 'signup' : 'signin'));
 $('#filters').addEventListener('submit', (event) => { event.preventDefault(); loadData(); });
-$('#refresh').addEventListener('click', () => { checkHealth(); if (state.token) loadData(); });
+$('#refresh').addEventListener('click', () => { checkHealth(); if (state.user) loadData(); });
 $('#signOut').addEventListener('click', signOut);
 $('#close').addEventListener('click', closeDrawer);
 $('#drawer').addEventListener('click', (event) => { if (event.target.id === 'drawer') closeDrawer(); });
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !$('#drawer').hidden) closeDrawer(); });
 
 checkHealth();
-if (state.token) loadData();
+initializeSession();
 </script>
 </body>
 </html>`;

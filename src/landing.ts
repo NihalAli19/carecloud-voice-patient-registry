@@ -43,7 +43,7 @@ export function landingHtml(nonce: string): string {
     .nav-links a { color: #dce8ec; font-size: 13px; font-weight: 650; text-decoration: none; }
     .nav-links a:hover { color: #fff; }
     .hero { padding: clamp(58px, 8vw, 100px) 0 58px; background: linear-gradient(155deg, #fff 0%, #f4f7f7 55%, #e9f4f1 100%); border-bottom: 1px solid var(--line); }
-    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(320px, .7fr); align-items: center; gap: clamp(38px, 7vw, 88px); }
+    .hero-grid { display: block; }
     .eyebrow { display: inline-flex; align-items: center; gap: 9px; color: var(--teal-dark); font-size: 11px; font-weight: 820; letter-spacing: .11em; text-transform: uppercase; }
     .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 5px rgba(8,127,114,.11); }
     h1 { max-width: 760px; margin: 15px 0 19px; font-size: clamp(42px, 6.3vw, 72px); line-height: 1.01; letter-spacing: -.045em; }
@@ -55,17 +55,7 @@ export function landingHtml(nonce: string): string {
     .button-secondary { background: #fff; color: var(--teal-dark); }
     .button-secondary:hover { background: var(--teal-soft); }
     .privacy-note { max-width: 690px; margin: 0; color: #6f5425; font-size: 12px; }
-    .status-card { padding: 27px; background: var(--navy); color: #fff; border: 1px solid rgba(255,255,255,.08); border-radius: 18px; box-shadow: var(--shadow); }
-    .status-card h2 { margin: 0 0 4px; font-size: 19px; }
-    .status-card > p { margin: 0 0 22px; color: #bdd0d8; font-size: 12px; }
-    .status-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px solid rgba(255,255,255,.12); }
-    .status-row span:first-child { color: #ccdae0; font-size: 12px; }
-    .status-value { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 740; text-align: right; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: #e0ad4d; }
-    .dot[data-state="healthy"] { background: #42ce98; }
-    .dot[data-state="error"] { background: #f17787; }
-    .phone { color: #fff; text-decoration: none; }
-    .phone:hover { text-decoration: underline; }
+
     section.content { padding: 72px 0; }
     .section-head { max-width: 690px; margin-bottom: 31px; }
     .section-head h2 { margin: 8px 0 9px; font-size: clamp(28px, 4vw, 42px); line-height: 1.15; letter-spacing: -.025em; }
@@ -102,7 +92,7 @@ export function landingHtml(nonce: string): string {
     }
     @media (max-width: 560px) {
       .wrap { width: min(100% - 28px, 1160px); }
-      .nav-links a:first-child { display: none; }
+
       .hero { padding-top: 49px; }
       h1 { font-size: 43px; }
       .actions { flex-direction: column; }
@@ -120,7 +110,7 @@ export function landingHtml(nonce: string): string {
         <span class="brand-mark" aria-hidden="true">CC</span>
         <span class="brand-copy">Voice Intake<small>Technical assessment</small></span>
       </a>
-      <div class="nav-links"><a href="/docs">API documentation</a><a href="/dashboard">Reviewer dashboard</a></div>
+      <div class="nav-links"><a href="/dashboard">Sign in</a></div>
     </nav>
   </header>
 
@@ -133,19 +123,11 @@ export function landingHtml(nonce: string): string {
           <p class="lead">Call the AI intake agent, complete a synthetic patient registration, then verify the persisted record and call outcome in the secured reviewer dashboard.</p>
           <div class="actions">
             <a class="button button-primary" href="tel:+18646255246">Call +1 (864) 625-5246</a>
-            <a class="button button-secondary" href="/dashboard">Open reviewer dashboard</a>
+            <a class="button button-secondary" href="/dashboard?mode=signup">Create account</a>
           </div>
           <p class="privacy-note"><strong>Synthetic data only.</strong> This assessment is not HIPAA compliant. Do not provide real patient or health information. Carrier charges may apply.</p>
         </div>
 
-        <aside class="status-card" aria-labelledby="statusHeading">
-          <h2 id="statusHeading">Assessment status</h2>
-          <p>Live signals for the reviewer path.</p>
-          <div class="status-row"><span>Application API</span><strong class="status-value"><i class="dot" id="healthDot"></i><span id="healthText" role="status" aria-live="polite">Checking</span></strong></div>
-          <div class="status-row"><span>Voice line</span><strong class="status-value"><a class="phone" href="tel:+18646255246">+1 (864) 625-5246</a></strong></div>
-          <div class="status-row"><span>Review access</span><strong class="status-value">API key required</strong></div>
-          <div class="status-row"><span>Data policy</span><strong class="status-value">Synthetic only</strong></div>
-        </aside>
       </div>
     </section>
 
@@ -158,7 +140,7 @@ export function landingHtml(nonce: string): string {
       <div class="steps">
         <article class="step"><div class="step-number">01</div><h3>Call the intake agent</h3><p>Use the U.S. number above. Speak naturally, answer out of order, make a correction, or switch between English and Spanish.</p></article>
         <article class="step"><div class="step-number">02</div><h3>Review and confirm</h3><p>The agent validates each field, reads the complete profile back, and must receive explicit confirmation before saving anything.</p></article>
-        <article class="step"><div class="step-number">03</div><h3>Verify the result</h3><p>Open the secured dashboard with the privately supplied assessment key and confirm the patient record and completed call outcome.</p></article>
+        <article class="step"><div class="step-number">03</div><h3>Verify the result</h3><p>Sign in or create an account, then confirm the patient record and completed call outcome in the secured dashboard.</p></article>
       </div>
     </section>
 
@@ -196,24 +178,8 @@ export function landingHtml(nonce: string): string {
     </section>
   </main>
 
-  <footer><div class="footer-row wrap"><span>CareCloud AI Engineer technical assessment</span><span><a href="/docs">API docs</a> &nbsp;·&nbsp; <a href="/dashboard">Dashboard</a></span></div></footer>
+  <footer><div class="footer-row wrap"><span>CareCloud AI Engineer technical assessment</span><span><a href="/dashboard">Sign in to dashboard</a></span></div></footer>
 
-  <script nonce="${nonce}">
-    const healthDot = document.getElementById('healthDot');
-    const healthText = document.getElementById('healthText');
-    fetch('/health', { headers: { accept: 'application/json' } })
-      .then((response) => response.ok ? response.json() : Promise.reject(new Error('unhealthy')))
-      .then((payload) => {
-        const healthy = payload && payload.data && payload.data.status === 'ok' && payload.data.database === 'connected';
-        if (!healthy) throw new Error('unhealthy');
-        healthDot.dataset.state = 'healthy';
-        healthText.textContent = 'Operational';
-      })
-      .catch(() => {
-        healthDot.dataset.state = 'error';
-        healthText.textContent = 'Unavailable';
-      });
-  </script>
 </body>
 </html>`;
 }

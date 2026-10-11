@@ -1,5 +1,6 @@
 import { dashboardHtml } from "./dashboard";
 import { landingHtml } from "./landing";
+import { handleCurrentUser, handleSignIn, handleSignOut, handleSignUp, requireApiKeyOrSession } from "./auth";
 import { docsHtml, openApiDocument } from "./openapi";
 import {
   createPatient,
@@ -34,7 +35,7 @@ function conflictResponse(error: unknown): Response | null {
 }
 
 async function handlePatients(request: Request, env: Env, url: URL): Promise<Response> {
-  const authError = requireApiKey(request, env);
+  const authError = request.method === "GET" ? await requireApiKeyOrSession(request, env) : requireApiKey(request, env);
   if (authError) return authError;
 
   const parts = url.pathname.split("/").filter(Boolean);
@@ -140,6 +141,23 @@ async function route(request: Request, env: Env, context: ExecutionContext): Pro
     return new Response(JSON.stringify(openApiDocument(url.origin)), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
   }
 
+  if (url.pathname === "/auth/signup") {
+    if (request.method !== "POST") return methodNotAllowed("POST");
+    return handleSignUp(request, env);
+  }
+  if (url.pathname === "/auth/signin") {
+    if (request.method !== "POST") return methodNotAllowed("POST");
+    return handleSignIn(request, env);
+  }
+  if (url.pathname === "/auth/signout") {
+    if (request.method !== "POST") return methodNotAllowed("POST");
+    return handleSignOut(request, env);
+  }
+  if (url.pathname === "/auth/me") {
+    if (request.method !== "GET") return methodNotAllowed("GET");
+    return handleCurrentUser(request, env);
+  }
+
   if (url.pathname === "/health") {
     if (request.method !== "GET") return methodNotAllowed("GET");
     try {
@@ -157,7 +175,7 @@ async function route(request: Request, env: Env, context: ExecutionContext): Pro
 
   if (url.pathname === "/calls") {
     if (request.method !== "GET") return methodNotAllowed("GET");
-    const authError = requireApiKey(request, env);
+    const authError = await requireApiKeyOrSession(request, env);
     if (authError) return authError;
     const raw = Number(url.searchParams.get("limit") ?? 25);
     if (!Number.isInteger(raw) || raw < 1 || raw > 100) return failure(400, "INVALID_PAGINATION", "limit must be an integer from 1–100.");
